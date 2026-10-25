@@ -20,7 +20,7 @@
   /** egm2008_tr_1dk.bin: uint16 (little-endian), mm cinsinden N, satirlar kuzeyden
    *  guneye, her satir batidan doguya. ICGEM calcgrid ciktisindan uretildi. */
   const IZGARA = {
-    dosya: "data/egm2008_tr_1dk.bin",
+    dosya: "egm2008_tr_1dk.bin",
     model: "EGM2008",
     maksDerece: 2190,
     fonksiyonel: "geoid (ICGEM: height_anomaly_ell + topografya terimi, ETOPO1)",

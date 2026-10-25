@@ -1,56 +1,73 @@
-# ICGEM proxy (isteğe bağlı)
+# Koordinat Dönüşümü — Web
 
-ICGEM (icgem.gfz.de) tarayıcılara başka sitelerden veri okuma izni (CORS) vermez. Bu yüzden GitHub Pages'teki site ICGEM'e hesap isteğini gönderebilir ama sonucu kendisi okuyamaz. Bu klasördeki küçük Cloudflare Worker isteği sunucu tarafında yapar ve sonucu siteye CORS başlığıyla döndürür. Kurulursa sitedeki **ICGEM'den iste** düğmesi tamamen otomatik çalışır; kurulmazsa site ICGEM'i yeni sekmede açar ve sonuç dosyası (`.dat`) sayfaya bırakılır.
+**Site:** [salihtatci.github.io/new_coordinate_trans_web](https://salihtatci.github.io/new_coordinate_trans_web/)
 
-```
-GET https://icgem-proxy.<hesabınız>.workers.dev/?lat=39.925&lon=32.8369&model=EGM2008
-→ {"N": 37.6026117694, "model": "EGM2008", "id": "...", "sure_s": 24, ...}
-```
+Tarayıcıda çalışan jeodezik koordinat dönüşümü. İzin verirseniz bulunduğunuz konumu alır, dönüşüm kutularına yazar, geoit ondülasyonunu (N) **ICGEM**'den ister ve **ortometrik yüksekliği (H = h − N)** hesaplar. Hesap çekirdeği, [coordinate_transformation](https://github.com/salihtatci/coordinate_transformation) deposundaki Python/Kivy uygulamasının (`jeodezi.py`) birebir JavaScript karşılığıdır.
 
-Desteklenen modeller: `EGM2008`, `XGM2019e_2159`, `EIGEN-6C4`, `SGG-UGM-2`, `EGM96`. Fonksiyonel `geoid`, referans sistem WGS84, sıfırıncı derece terimi dahil.
+<p align="center">
+  <img src="ekran_web_konum.png" width="68%" alt="Konum ve yükseklik sekmesi: Ankara'da h = 975.600 m, ICGEM EGM2008 N = 37.603 m, H = 937.997 m">
+  <img src="ekran_web_mobil.png" width="28%" alt="Sitenin telefondaki karanlık tema görünümü">
+</p>
 
-## Kurulum (ücretsiz Cloudflare hesabı, ~5 dakika)
+## Neler yapar
 
-**Panelden:**
+- **Konum ve yükseklik**: tarayıcının konum servisiyle φ, λ ve h alınır (izin ister, yalnızca https'te çalışır); N bulunur, H = h − N hesaplanır. Yükseklik kesiti çizimi h, N ve H'yi gösterir; farklı N kaynakları bir tabloda karşılaştırılır.
+- **Coğrafi ⇄ Kartezyen**: GRS80, WGS84, Hayford, Krassovsky, Bessel; ters çözüm iteratif ya da Bowring.
+- **Datum ve çerçeve**: IERS 14 parametre (zamana bağlı), hızsız 7 parametre, Bursa-Wolf (PV/CF), Molodensky-Badekas, yalnız elipsoit değişimi. ITRF2020…ITRF96, ETRF2000, WGS84 (G2296/G2139/G1762), ED50. Parametreler kayıtlı setlerden otomatik seçilir; manuel giriş de yapılabilir.
+- Her dönüşüm sekmesinde **Konumumu kullan** düğmesi vardır.
 
-1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create** → **Create Worker**. Ad olarak `icgem-proxy` yazıp **Deploy**'a basın.
-2. **Edit code**'a girin, editördeki kodu silip `worker.js` dosyasının içeriğini yapıştırın, **Deploy**'a basın.
-3. Worker'ın **Settings → Variables and Secrets** bölümüne `IZINLI_KOKEN = https://salihtatci.github.io` değişkenini ekleyin (yalnız sizin siteniz kullanabilsin diye).
+## Geoit ondülasyonu (N) nereden geliyor?
 
-**Komut satırından:**
+ICGEM (GFZ Potsdam) herkese açık bir API sunmaz ve tarayıcılara başka sitelerden veri okuma izni (CORS) vermez. Site N'yi üç yoldan alır:
+
+| Yol | Nasıl çalışır |
+| --- | --- |
+| **Gömülü ICGEM ızgarası** | ICGEM'in ızgara servisinde hesaplatılan EGM2008 geoit ızgarası (`egm2008_tr_1dk.bin`: 1′ aralık, 35.5–42.5° K, 25.5–45° D). Konum alınınca otomatik, internetsiz çalışır. ICGEM nokta servisiyle 40 bağımsız noktada en büyük fark 9.7 mm, RMS 4.0 mm. |
+| **ICGEM'den iste (yeni sekme)** | İstek ICGEM'in nokta hesap servisine yeni sekmede gönderilir (~25 s). **results → Points data** ile inen `.dat` dosyası sayfaya bırakılınca N otomatik okunur. |
+| **ICGEM'den iste (otomatik)** | `worker.js` (Cloudflare Worker) isteği sunucu tarafında yapar; adresi `config.js` içindeki `icgemProxyUrl`'e yazılırsa düğme sonucu kendisi getirir. |
+
+ICGEM ayarları: fonksiyonel `geoid`, referans sistem WGS84, sıfırıncı derece terimi dahil, modelin kendi gelgit sistemi. Modeller: EGM2008 (varsayılan), XGM2019e_2159, EIGEN-6C4, SGG-UGM-2, EGM96.
+
+## Dosyalar
+
+Site dosyalarının hepsi aynı klasördedir (alt klasör yok); GitHub'ın web yükleyicisiyle doğrudan köke yüklenebilir.
+
+| Dosya | Görevi |
+| --- | --- |
+| `index.html`, `style.css` | Sayfa ve görünüm |
+| `jeodezi.js` | Hesap çekirdeği (`jeodezi.py`'nin karşılığı) |
+| `geoit.js` | Gömülü ızgara, ICGEM istekleri, `.dat` okuyucu, H = h − N |
+| `app.js` | Arayüz ve konum servisi |
+| `config.js` | İsteğe bağlı ICGEM proxy adresi |
+| `egm2008_tr_1dk.bin` | ICGEM EGM2008 geoit ızgarası (Türkiye, 1′, 0.99 MB) |
+| `.nojekyll` | GitHub Pages'in dosyaları olduğu gibi yayınlaması için |
+| `worker.js`, `wrangler.toml` | İsteğe bağlı otomatik ICGEM proxy'si |
+
+## Yayınlama ve yerelde çalıştırma
+
+GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / `(root)`**.
+
+Yerelde (`index.html`'i çift tıklamak yerine; gömülü ızgara dosyadan açılan sayfada yüklenemez):
 
 ```bash
-cd icgem-proxy
-npx wrangler login
-npx wrangler deploy
+python -m http.server 8000
+# tarayıcıda http://localhost:8000
 ```
 
-## Siteye bağlama
+## Otomatik ICGEM proxy'si (isteğe bağlı)
 
-`docs/js/config.js` dosyasında adresi yazın ve depoya yükleyin:
+1. Ücretsiz Cloudflare hesabında **Workers & Pages → Create Worker**, adı `icgem-proxy`; **Edit code**'a `worker.js` içeriğini yapıştırıp **Deploy**. Ya da bu klasörde `npx wrangler login && npx wrangler deploy`.
+2. Worker değişkeni: `IZINLI_KOKEN = https://salihtatci.github.io`.
+3. Deneme: `https://icgem-proxy.<hesabınız>.workers.dev/?lat=39.925&lon=32.8369` yaklaşık 25 saniyede `"N": 37.6026...` döndürür.
+4. `config.js` içinde `icgemProxyUrl: "https://icgem-proxy.<hesabınız>.workers.dev"` yazıp yükleyin.
 
-```js
-window.KD_AYAR = {
-  icgemProxyUrl: "https://icgem-proxy.<hesabınız>.workers.dev",
-};
-```
+## Uyarılar
 
-## Deneme
+- H, seçilen küresel modelin geoidine göredir; TUDKA-99 ve TG-20 hibrit geoidiyle onlarca santimetre fark edebilir.
+- ICGEM'in sıfırıncı derece terimi yalnızca GM farkını içerir. NGA'nın resmî EGM2008 değerleri W0 − U0'ı da içerdiğinden ICGEM'den yaklaşık 0.41 m küçüktür: Ankara'da (39.925°, 32.8369°) ICGEM 37.603 m, GeographicLib GeoidEval 37.189 m verir.
+- Telefonların verdiği yükseklik genellikle ±5–15 m belirsizdir; hassas iş için h'yi GNSS ölçünüzden yazın.
+- IERS, EUREF ve EPSG parametreleri ders amaçlıdır; resmî işlerde güncel tablolarla karşılaştırın.
 
-Tarayıcıda `https://icgem-proxy.<hesabınız>.workers.dev/?lat=39.925&lon=32.8369` adresini açın. Yaklaşık 25 saniye sonra `"N": 37.6026...` dönmelidir.
+Geoit verisi: [ICGEM, GFZ Potsdam](https://icgem.gfz.de/). EGM2008: Pavlis vd. (2012), JGR 117, B04406.
 
-Yerel test (Node 18+, internet gerekmez; ICGEM'in davranışını taklit eden bir sunucu kullanır):
-
-```bash
-node icgem-proxy/test_worker.mjs
-```
-
-## Nasıl çalışır
-
-ICGEM'in nokta hesap formu (`/calcpoints`) incelenerek çıkarılan akış:
-
-1. `POST /calcsrvpoints` (multipart form, tek satırlık nokta dosyası) → `302`, `Location: .../calc_stat/<64 haneli iş kimliği>`
-2. `GET /calc_res_points/<kimlik>` → hesap bitene kadar `404`, bitince ICGEM `.dat` metni
-3. `.dat` içindeki 5. sütun (geoid, metre) `N` olarak döndürülür.
-
-Her istek ICGEM'de gerçek bir hesap başlatır; servisi gereksiz yere yormamak için site isteği yalnızca düğmeye basıldığında gönderir. ICGEM yoğunluk nedeniyle yeni hesap kabul etmezse proxy `502` ve ICGEM'in mesajını döndürür.
+İTÜ Geomatik Mühendisliği, Salih ([@salihtatci](https://github.com/salihtatci)).
