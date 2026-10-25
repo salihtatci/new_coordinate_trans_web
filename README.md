@@ -20,12 +20,14 @@ Tarayıcıda çalışan jeodezik koordinat dönüşümü. İzin verirseniz bulun
 
 | Cihaz | Ne olur |
 | --- | --- |
-| **Android telefon** (açık havada) | Tarayıcı yüksekliği WGS84 elipsoidine göre verir, doğrudan h olur. İlk konum çoğu zaman yüksekliksiz gelir; site GPS'i 20 saniye dinler, yükseklikli konum gelince kutuları günceller. |
+| **Android telefon** (açık havada) | Tarayıcı yüksekliği WGS84 elipsoidine göre verir, doğrudan h olur. İlk konum çoğu zaman yüksekliksiz gelir; site o arada h'yi arazi modelinden doldurur, GPS'i 20 saniye dinler ve yükseklikli konum gelince GPS değerini yazar. |
 | **iPhone, iPad, Mac** | Apple yüksekliği deniz seviyesine göre (EGM2008) verir. Site h = H<sub>cihaz</sub> + N − 0.41 m ile elipsoidal yüksekliğe çevirir. |
-| **Bilgisayar** | GPS yok; konum Wi-Fi/IP'den gelir, yükseklik verilmez. **h'yi arazi modelinden tahmin et** düğmesi Copernicus DEM GLO-90 yüksekliğini ([Open-Meteo](https://open-meteo.com/en/docs/elevation-api) üzerinden, EGM2008'e göre) alır ve h = H<sub>DEM</sub> + N − 0.41 m hesaplar. Tahmindir: model bina ve ağaçları içerebilir, belirsizlik birkaç metredir. |
+| **Bilgisayar** | GPS yok; konum Wi-Fi/IP'den gelir, yükseklik verilmez. Site bu durumda h'yi otomatik olarak arazi modelinden doldurur (Konum ve dönüşüm sekmelerinin hepsinde): Copernicus DEM GLO-90 yüksekliğini ([Open-Meteo](https://open-meteo.com/en/docs/elevation-api) üzerinden, EGM2008'e göre) alır ve h = H<sub>DEM</sub> + N − 0.41 m hesaplar. Tahmindir: model bina ve ağaçları içerebilir, belirsizlik birkaç metredir. |
 | **GNSS alıcısı** | Hassas iş için h'yi ölçünüzden kutuya yazın. |
 
 0.41 m, ICGEM ile NGA'nın EGM2008 geoidi arasındaki sıfırıncı derece farkıdır (Ankara 0.413 m, İstanbul 0.411 m; GeographicLib ile karşılaştırıldı).
+
+**Konum izni kapalıysa** site hangi cihazda açıldığını tanır ve izni açmanın adımlarını gösterir. iPhone'da izin telefon ayarlarındadır: **Ayarlar → Gizlilik ve Güvenlik → Konum Servisleri** açık olmalı, aynı listede **Safari Web Siteleri** için **Uygulamayı Kullanırken** seçilmeli ve **Hassas Konum** açık olmalı; ayrıca **Ayarlar → Uygulamalar → Safari → Konum** (eski iOS'ta **Ayarlar → Safari → Konum**) **Sor** ya da **İzin Ver** olmalı. WhatsApp, Instagram gibi uygulamaların kendi tarayıcıları konumu engelleyebilir; sayfayı Safari ya da Chrome'da açın.
 
 ## Geoit ondülasyonu (N) nereden geliyor?
 

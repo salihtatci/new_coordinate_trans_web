@@ -98,6 +98,12 @@ button.tam { width: 100%; margin: 4px 0 8px; }
 .durum.iyi { color: var(--yesil); }
 .durum.kotu { color: var(--hata); }
 .onay { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.izin-yardim { border-left: 3px solid var(--sari); background: var(--yuzey); padding: 10px 14px; margin: 4px 0 14px; font-size: .95rem; max-width: 62ch; }
+.izin-yardim[hidden] { display: none; }
+.izin-yardim p { margin: 0; }
+.izin-yardim ol { margin: 6px 0 8px; padding-left: 22px; }
+.izin-yardim li { margin-bottom: 4px; }
+.izin-yardim .kucuk { margin: 0; }
 
 /* ---------- konum ---------- */
 .konum-izgara { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 36px; align-items: start; }
@@ -150,7 +156,7 @@ fieldset.kaynak legend { font-family: var(--baslik); font-weight: 600; font-size
 .iki-sutun { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 32px; align-items: start; }
 .rapor {
   margin: 0; background: var(--ekran); color: var(--ekran-yazi); font: 400 .82rem/1.55 var(--es);
-  padding: 16px 18px; border-radius: 6px; min-height: 320px; white-space: pre; overflow-x: auto; tab-size: 4;
+  padding: 16px 18px; border-radius: 6px; min-height: 320px; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: auto; tab-size: 4;
   position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
 }
 .parametreler { margin-top: 18px; border-top: 2px solid var(--murekkep); padding-top: 10px; }
