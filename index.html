@@ -5,7 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Koordinat Dönüşümü</title>
   <meta name="description" content="Tarayıcıda çalışan jeodezik koordinat dönüşümü: coğrafi ve kartezyen koordinatlar, Bursa-Wolf, Molodensky-Badekas, IERS 14 parametre, konumdan ICGEM geoit ondülasyonu ve ortometrik yükseklik.">
-  <meta name="theme-color" content="#1F6B57">
+  <meta name="theme-color" content="#F7F9F6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#17201F" media="(prefers-color-scheme: dark)">
+  <script>
+    /* secilen tema (Acik / Koyu) sayfa cizilmeden uygulanir; secim yoksa cihazin ayari gecerlidir */
+    (function () {
+      try {
+        var t = localStorage.getItem("kd-tema");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) { /* depolama kapali: sistem temasi */ }
+    })();
+  </script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231F6B57'/%3E%3Cpath d='M4 18c6-5 18-5 24 0' stroke='%23F0BE2E' stroke-width='3' fill='none'/%3E%3Ccircle cx='16' cy='11' r='3' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +29,14 @@
         <h1>Koordinat Dönüşümü</h1>
         <p class="alt-baslik">Konumdan ortometrik yüksekliğe, coğrafi ve kartezyen koordinatlardan ITRF, ETRF, WGS84 ve ED50 dönüşümlerine. Hesaplar tarayıcınızda yapılır.</p>
       </div>
-      <a class="depo" href="https://github.com/salihtatci/coordinate_transformation">Kaynak kod</a>
+      <div class="ust-sag">
+        <div class="tema" role="group" aria-label="Tema">
+          <button type="button" data-tema="sistem" aria-pressed="true" title="Cihazın açık / koyu ayarını izler">Sistem</button>
+          <button type="button" data-tema="light" aria-pressed="false">Açık</button>
+          <button type="button" data-tema="dark" aria-pressed="false">Koyu</button>
+        </div>
+        <a class="depo" href="https://github.com/salihtatci/coordinate_transformation">Kaynak kod</a>
+      </div>
     </div>
     <nav class="sekmeler" role="tablist" aria-label="Bölümler">
       <button role="tab" id="sekme-konum" aria-controls="panel-konum" aria-selected="true">Konum ve yükseklik</button>

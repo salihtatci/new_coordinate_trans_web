@@ -30,6 +30,31 @@
     if (secili != null) sel.value = secili;
   }
 
+  // ------------------------------------------------------------------ tema (Sistem / Acik / Koyu)
+  const TEMA_ANAHTAR = "kd-tema";
+  function temaUygula(t) {
+    const kok = document.documentElement;
+    if (t === "light" || t === "dark") kok.setAttribute("data-theme", t); else kok.removeAttribute("data-theme");
+    const secili = t === "light" || t === "dark" ? t : "sistem";
+    for (const b of document.querySelectorAll("[data-tema]")) b.setAttribute("aria-pressed", String(b.dataset.tema === secili));
+    // tarayici cubugunun rengi: secim varsa ona, yoksa cihazin ayarina uy
+    for (const m of document.querySelectorAll('meta[name="theme-color"]')) {
+      const koyuMeta = (m.getAttribute("media") || "").includes("dark");
+      if (secili === "sistem") m.setAttribute("content", koyuMeta ? "#17201F" : "#F7F9F6");
+      else m.setAttribute("content", secili === "dark" ? "#17201F" : "#F7F9F6");
+    }
+  }
+  let kayitliTema = null;
+  try { kayitliTema = localStorage.getItem(TEMA_ANAHTAR); } catch (e) { kayitliTema = null; }
+  temaUygula(kayitliTema);
+  for (const b of document.querySelectorAll("[data-tema]")) {
+    b.addEventListener("click", () => {
+      const t = b.dataset.tema;
+      try { if (t === "sistem") localStorage.removeItem(TEMA_ANAHTAR); else localStorage.setItem(TEMA_ANAHTAR, t); } catch (e) { /* depolama kapali */ }
+      temaUygula(t);
+    });
+  }
+
   // ------------------------------------------------------------------ sekmeler
   const sekmeler = [...document.querySelectorAll('[role="tab"]')];
   function sekmeAc(sekme, odakla = false) {

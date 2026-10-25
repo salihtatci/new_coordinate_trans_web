@@ -15,6 +15,7 @@ Tarayıcıda çalışan jeodezik koordinat dönüşümü. İzin verirseniz bulun
 - **Coğrafi ⇄ Kartezyen**: GRS80, WGS84, Hayford, Krassovsky, Bessel; ters çözüm iteratif ya da Bowring.
 - **Datum ve çerçeve**: IERS 14 parametre (zamana bağlı), hızsız 7 parametre, Bursa-Wolf (PV/CF), Molodensky-Badekas, yalnız elipsoit değişimi. ITRF2020…ITRF96, ETRF2000, WGS84 (G2296/G2139/G1762), ED50. Parametreler kayıtlı setlerden otomatik seçilir; manuel giriş de yapılabilir.
 - Her dönüşüm sekmesinde **Konumumu kullan** düğmesi vardır.
+- Sağ üstteki seçiciyle tema **Sistem** (cihazın ayarı), **Açık** ya da **Koyu** yapılabilir; seçim tarayıcıda hatırlanır.
 
 ## Elipsoidal yükseklik (h) nereden gelir?
 
