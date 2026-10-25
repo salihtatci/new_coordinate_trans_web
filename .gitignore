@@ -1,0 +1,34 @@
+# Python local environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+*.spec
+# PyInstaller .spec dosyalari haric; buildozer.spec ise depoda tutulur
+!buildozer.spec
+!.github/
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Android / Buildozer output
+.buildozer/
+bin/
+.gradle/
+# Private or experimental data
+*.log
+.env
+.env.*
+# Web sitesi / Node.js
+node_modules/
+.wrangler/
+web_tests/capraz_vakalar.json
+test-results/
