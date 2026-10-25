@@ -51,6 +51,11 @@
             <input id="k-h" inputmode="decimal" autocomplete="off" placeholder="WGS84 elipsoidine göre">
           </div>
           <p id="k-dogruluk" class="kucuk"></p>
+          <div class="satir-dugme h-yok">
+            <button id="k-dem" type="button">h'yi arazi modelinden tahmin et</button>
+            <span class="kucuk">GPS'i olmayan bilgisayarlar için: Copernicus DEM yüksekliği + N</span>
+          </div>
+          <p id="k-h-not" class="kucuk" aria-live="polite"></p>
 
           <fieldset class="kaynak">
             <legend>Geoit ondülasyonu (N)</legend>
@@ -92,7 +97,7 @@
           </svg>
           <figcaption id="kesit-yazi">
             <dl class="degerler">
-              <div><dt>h</dt><dd id="d-h">—</dd><dd class="birim">elipsoidal yükseklik</dd></div>
+              <div><dt>h</dt><dd id="d-h">—</dd><dd class="birim" id="d-h-kaynak">elipsoidal yükseklik</dd></div>
               <div><dt>N</dt><dd id="d-n">—</dd><dd class="birim" id="d-n-kaynak">geoit ondülasyonu</dd></div>
               <div class="vurgu"><dt>H</dt><dd id="d-hh">—</dd><dd class="birim">ortometrik yükseklik, H = h − N</dd></div>
             </dl>
@@ -212,6 +217,14 @@
         <li><b>Elle</b>: N'yi başka bir kaynaktan biliyorsanız yazabilirsiniz.</li>
       </ul>
 
+      <h2>Elipsoidal yükseklik (h) nereden gelir?</h2>
+      <ul>
+        <li><b>Telefon GPS'i</b>: siteyi telefonda, açık havada açın. Android tarayıcıları yüksekliği WGS84 elipsoidine göre verir, doğrudan h olarak kullanılır. İlk konum çoğu zaman yüksekliksiz gelir; site GPS'i 20 saniye dinleyip yükseklikli konum gelince kutuları günceller.</li>
+        <li><b>iPhone, iPad ve Mac</b>: Apple yüksekliği deniz seviyesine göre (EGM2008) verir. Site bunu h = H<sub>cihaz</sub> + N − 0.41 m ile elipsoidal yüksekliğe çevirir (0.41 m, ICGEM ile NGA'nın EGM2008 sıfırıncı derece kuralları arasındaki farktır).</li>
+        <li><b>Bilgisayar</b>: GPS olmadığı için konum Wi-Fi ya da IP'den gelir ve yükseklik verilmez. <b>h'yi arazi modelinden tahmin et</b> düğmesi o noktanın Copernicus DEM yüksekliğini (90 m çözünürlük, EGM2008'e göre) alır ve h = H<sub>DEM</sub> + N − 0.41 m hesaplar. Bu bir ölçü değildir: model bina ve ağaçları içerebilir, konumun kendisi de onlarca metre hatalı olabilir.</li>
+        <li><b>GNSS alıcısı</b>: hassas iş için h'yi ölçünüzden (ör. TUSAGA-Aktif RTK) kutuya yazın.</li>
+      </ul>
+
       <h2>Datum dönüşüm modelleri</h2>
       <p><b>Bursa-Wolf</b>: X₂ = T + (1 + D) R X₁, dönüklük dünya merkezi etrafında. <b>Molodensky-Badekas</b>: X₂ = Xm + T + (1 + D) R (X₁ − Xm), dönüklük ağırlık merkezi etrafında. <b>IERS 14 parametre</b>: her parametre P(t) = P(t₀) + Ṗ (t − t₀) ile ölçü epoğuna taşınır, sonra X₂ = X₁ + T + D X₁ + R X₁. Hızları ihmal etmek (7 parametre, t₀'da sabit) yıllar ilerledikçe santimetre düzeyinde hata yapar.</p>
       <p><b>WGS84 gerçekleştirmeleri</b>: G1762 ≈ ITRF2008, G2139 ≈ ITRF2014, G2296 ≈ ITRF2020 (santimetre düzeyinde örtüşür, sıfır parametre kabul edilir). <b>WGS84 (EPSG ensemble)</b>: EPSG'deki WGS 84 topluluğu (yaklaşık 2 m); ED50 → WGS 84 (EPSG:1784) bu sisteme tanımlıdır.</p>
@@ -221,12 +234,12 @@
 
       <h2>Uyarılar</h2>
       <p>Programdaki IERS, EUREF ve EPSG parametreleri ders amaçlıdır; resmî işlerde güncel tablolarla (<a href="https://itrf.ign.fr/en/solutions/transformations">itrf.ign.fr</a>, <a href="https://epsg.org/">epsg.org</a>) karşılaştırın. <code>ITRF96 (TUREF)</code> etiketi sadeleştirilmiştir: TUREF'in referans epoğu 2005.0'dır ve program noktayı hız modeliyle bu epoğa taşımaz.</p>
-      <p class="kucuk">Geoit verisi: <a href="https://icgem.gfz.de/">ICGEM, GFZ Potsdam</a>. EGM2008: Pavlis vd. (2012), JGR 117, B04406.</p>
+      <p class="kucuk">Geoit verisi: <a href="https://icgem.gfz.de/">ICGEM, GFZ Potsdam</a>. EGM2008: Pavlis vd. (2012), JGR 117, B04406. Arazi yüksekliği: Copernicus DEM GLO-90 (Copernicus programı, Avrupa Birliği ve ESA; © DLR e.V. 2010–2014 ve © Airbus Defence and Space GmbH 2014–2018), <a href="https://open-meteo.com/">Open-Meteo</a> Elevation API üzerinden.</p>
     </section>
   </main>
 
   <footer class="alt">
-    <p>İTÜ Geomatik Mühendisliği, Salih (<a href="https://github.com/salihtatci">@salihtatci</a>). Öğretim ve deneysel kullanım içindir.</p>
+    <p>İTÜ Geomatik Mühendisliği, Salih (<a href="https://github.com/salihtatci">@salihtatci</a>). Öğretim ve deneysel kullanım içindir. Geoit verisi ICGEM (GFZ Potsdam), arazi yüksekliği Copernicus DEM (<a href="https://open-meteo.com/">Open-Meteo</a>).</p>
   </footer>
 
   <script src="config.js"></script>

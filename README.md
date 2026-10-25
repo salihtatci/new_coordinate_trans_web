@@ -16,6 +16,17 @@ Tarayıcıda çalışan jeodezik koordinat dönüşümü. İzin verirseniz bulun
 - **Datum ve çerçeve**: IERS 14 parametre (zamana bağlı), hızsız 7 parametre, Bursa-Wolf (PV/CF), Molodensky-Badekas, yalnız elipsoit değişimi. ITRF2020…ITRF96, ETRF2000, WGS84 (G2296/G2139/G1762), ED50. Parametreler kayıtlı setlerden otomatik seçilir; manuel giriş de yapılabilir.
 - Her dönüşüm sekmesinde **Konumumu kullan** düğmesi vardır.
 
+## Elipsoidal yükseklik (h) nereden gelir?
+
+| Cihaz | Ne olur |
+| --- | --- |
+| **Android telefon** (açık havada) | Tarayıcı yüksekliği WGS84 elipsoidine göre verir, doğrudan h olur. İlk konum çoğu zaman yüksekliksiz gelir; site GPS'i 20 saniye dinler, yükseklikli konum gelince kutuları günceller. |
+| **iPhone, iPad, Mac** | Apple yüksekliği deniz seviyesine göre (EGM2008) verir. Site h = H<sub>cihaz</sub> + N − 0.41 m ile elipsoidal yüksekliğe çevirir. |
+| **Bilgisayar** | GPS yok; konum Wi-Fi/IP'den gelir, yükseklik verilmez. **h'yi arazi modelinden tahmin et** düğmesi Copernicus DEM GLO-90 yüksekliğini ([Open-Meteo](https://open-meteo.com/en/docs/elevation-api) üzerinden, EGM2008'e göre) alır ve h = H<sub>DEM</sub> + N − 0.41 m hesaplar. Tahmindir: model bina ve ağaçları içerebilir, belirsizlik birkaç metredir. |
+| **GNSS alıcısı** | Hassas iş için h'yi ölçünüzden kutuya yazın. |
+
+0.41 m, ICGEM ile NGA'nın EGM2008 geoidi arasındaki sıfırıncı derece farkıdır (Ankara 0.413 m, İstanbul 0.411 m; GeographicLib ile karşılaştırıldı).
+
 ## Geoit ondülasyonu (N) nereden geliyor?
 
 ICGEM (GFZ Potsdam) herkese açık bir API sunmaz ve tarayıcılara başka sitelerden veri okuma izni (CORS) vermez. Site N'yi üç yoldan alır:
@@ -68,6 +79,6 @@ python -m http.server 8000
 - Telefonların verdiği yükseklik genellikle ±5–15 m belirsizdir; hassas iş için h'yi GNSS ölçünüzden yazın.
 - IERS, EUREF ve EPSG parametreleri ders amaçlıdır; resmî işlerde güncel tablolarla karşılaştırın.
 
-Geoit verisi: [ICGEM, GFZ Potsdam](https://icgem.gfz.de/). EGM2008: Pavlis vd. (2012), JGR 117, B04406.
+Geoit verisi: [ICGEM, GFZ Potsdam](https://icgem.gfz.de/). EGM2008: Pavlis vd. (2012), JGR 117, B04406. Arazi yüksekliği: Copernicus DEM GLO-90 (Copernicus programı, Avrupa Birliği ve ESA), Open-Meteo Elevation API.
 
 İTÜ Geomatik Mühendisliği, Salih ([@salihtatci](https://github.com/salihtatci)).

@@ -57,29 +57,82 @@
   if (ilkSekme && sekmeler.includes(ilkSekme)) sekmeAc(ilkSekme);
 
   // ================================================================== KONUM (geolocation)
-  /** Tarayicidan konum ister. Dondurur Promise<{phi, lam, h|null, dogruluk, yDogruluk}> */
+  let izgaraVeri = null, izgaraHata = null;     // gomulu ICGEM izgarasi (asagida yuklenir)
+
+  /* Tarayicilarin verdigi yukseklik:
+   *  - Android ve digerleri: WGS84 elipsoidine gore (W3C tanimi, Android Location.getAltitude) -> dogrudan h
+   *  - Apple (iPhone, iPad, Mac): CoreLocation 'altitude' = deniz seviyesine gore (Apple: cogunlukla EGM2008)
+   *    -> h = H_cihaz + N_NGA ;  N_NGA = N_ICGEM - 0.41 m (ICGEM sifirinci derece kurali, W0 - U0 farki)
+   *  - Masaustu bilgisayarlar (Wi-Fi / IP konumu): yukseklik yok. */
+  const APPLE = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+  const NGA_FARK = 0.41;   // N_ICGEM - N_NGA(EGM2008): Ankara 0.413 m, Istanbul 0.411 m (GeographicLib ile karsilastirma)
+
+  function cihazKonumu(p) {
+    const c = p.coords;
+    // bazi masaustu tarayicilar yukseklik yokken 0 / dogruluk 0 dondurur: bunu "yukseklik yok" say
+    const varMi = Number.isFinite(c.altitude) && !(c.altitude === 0 && !(c.altitudeAccuracy > 0));
+    return {
+      phi: c.latitude, lam: c.longitude,
+      yuk: varMi ? c.altitude : null, yukTuru: varMi ? (APPLE ? "msl" : "elipsoidal") : null,
+      dogruluk: c.accuracy, yDogruluk: Number.isFinite(c.altitudeAccuracy) ? c.altitudeAccuracy : null,
+      zaman: new Date(p.timestamp || Date.now()),
+    };
+  }
+
+  /** Cihaz konumundan elipsoidal yukseklik. Dondurur {h|null, kaynak, not} */
+  function hBul(k) {
+    if (k.yuk === null) return { h: null, kaynak: null, not: "Cihaz yükseklik vermedi." };
+    if (k.yukTuru === "elipsoidal") return { h: k.yuk, kaynak: "gps", not: "" };
+    const s = izgaraVeri ? G.izgaraN(k.phi, k.lam, izgaraVeri) : null;
+    if (!s) return { h: null, kaynak: null, not: `Cihaz yüksekliği deniz seviyesine göre verdi (${k.yuk.toFixed(1)} m); h'ye çevirmek için bu noktada N gerekli.` };
+    return { h: k.yuk + s.N - NGA_FARK, kaynak: "msl",
+      not: `Cihaz yüksekliği deniz seviyesine göre verdi (${k.yuk.toFixed(1)} m, Apple/EGM2008); h = ${k.yuk.toFixed(1)} + N − 0.41 m ile çevrildi.` };
+  }
+
+  const KONUM_HATA = {
+    1: "Konum izni verilmedi. Tarayıcının adres çubuğundaki konum simgesinden izin verip tekrar deneyin.",
+    2: "Konum belirlenemedi. Cihazın konum servisinin açık olduğundan emin olun.",
+    3: "Konum isteği zaman aşımına uğradı. Açık alanda tekrar deneyin.",
+  };
+  function konumOnKontrol() {
+    if (!("geolocation" in navigator)) throw new Error("Bu tarayıcı konum servisini desteklemiyor.");
+    if (window.isSecureContext === false)
+      throw new Error("Konum yalnızca güvenli bağlantıda (https) alınabilir. Sayfayı GitHub Pages adresinden açın.");
+  }
+
+  /** Tek konum. Dondurur Promise<{phi, lam, yuk, yukTuru, h, hKaynak, hNot, dogruluk, yDogruluk, zaman}> */
   function konumIste() {
     return new Promise((coz, reddet) => {
-      if (!("geolocation" in navigator)) return reddet(new Error("Bu tarayıcı konum servisini desteklemiyor."));
-      if (window.isSecureContext === false)
-        return reddet(new Error("Konum yalnızca güvenli bağlantıda (https) alınabilir. Sayfayı GitHub Pages adresinden açın."));
+      try { konumOnKontrol(); } catch (e) { return reddet(e); }
       navigator.geolocation.getCurrentPosition(
-        (p) => coz({
-          phi: p.coords.latitude, lam: p.coords.longitude,
-          h: Number.isFinite(p.coords.altitude) ? p.coords.altitude : null,
-          dogruluk: p.coords.accuracy, yDogruluk: p.coords.altitudeAccuracy,
-          zaman: new Date(p.timestamp),
-        }),
-        (err) => {
-          const m = {
-            1: "Konum izni verilmedi. Tarayıcının adres çubuğundaki konum simgesinden izin verip tekrar deneyin.",
-            2: "Konum belirlenemedi. Cihazın konum servisinin açık olduğundan emin olun.",
-            3: "Konum isteği zaman aşımına uğradı. Açık alanda tekrar deneyin.",
-          }[err.code] || ("Konum alınamadı: " + err.message);
-          reddet(new Error(m));
-        },
+        (p) => { const k = cihazKonumu(p); const b = hBul(k); coz({ ...k, h: b.h, hKaynak: b.kaynak, hNot: b.not }); },
+        (err) => reddet(new Error(KONUM_HATA[err.code] || ("Konum alınamadı: " + err.message))),
         { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
     });
+  }
+
+  /** Ilk konumdan sonra GPS'in daha iyi (yukseklikli) konumunu bekler; her iyilesmede geri(k) cagrilir.
+   *  Dondurur: durdurma fonksiyonu. */
+  function konumIyilestir(ilk, geri, bitti, sureMs = 20000) {
+    if (!("geolocation" in navigator) || typeof navigator.geolocation.watchPosition !== "function") { bitti(ilk); return () => {}; }
+    let enIyi = ilk, kapandi = false, zam = null, izle = null;
+    const kapat = () => {
+      if (kapandi) return; kapandi = true;
+      clearTimeout(zam); try { if (izle !== null) navigator.geolocation.clearWatch(izle); } catch (e) { /* yok say */ }
+      bitti(enIyi);
+    };
+    izle = navigator.geolocation.watchPosition((p) => {
+      if (kapandi) return;
+      const k = cihazKonumu(p);
+      const dahaIyi = (k.yuk !== null && enIyi.yuk === null) ||
+        ((k.yuk !== null) === (enIyi.yuk !== null) && k.dogruluk < enIyi.dogruluk * 0.7);
+      if (!dahaIyi) return;
+      const b = hBul(k); enIyi = { ...k, h: b.h, hKaynak: b.kaynak, hNot: b.not };
+      geri(enIyi);
+      if (enIyi.yuk !== null && enIyi.dogruluk <= 15) kapat();
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 0, timeout: sureMs });
+    zam = setTimeout(kapat, sureMs);
+    return kapat;
   }
   const fmtKonum = (k) => ({ phi: k.phi.toFixed(8), lam: k.lam.toFixed(8), h: k.h === null ? "" : k.h.toFixed(3) });
 
@@ -363,11 +416,19 @@
 
   // ================================================================== KONUM VE ORTOMETRIK YUKSEKLIK
   secenekler($("k-model"), Object.keys(G.ICGEM_MODELLER), "EGM2008");
-  let izgaraVeri = null, izgaraHata = null;
   const nKayit = new Map();       // kaynak -> {etiket, model, N}
   let icgemBekleyen = null;       // yeni sekmede gonderilen istek {phi, lam, model}
   let proxyIptal = null;
   const ETIKET = { icgem: "ICGEM (canlı)", izgara: "Gömülü ICGEM ızgarası", elle: "Elle girilen" };
+  let hKaynak = null;             // gps | msl | dem | elle
+  const H_ETIKET = {
+    gps: "elipsoidal yükseklik, cihazın GPS'i",
+    msl: "elipsoidal yükseklik, cihazın deniz seviyesi yüksekliğinden",
+    dem: "elipsoidal yükseklik, arazi modelinden tahmin",
+    elle: "elipsoidal yükseklik, elle girildi",
+  };
+  let kullaniciDuzenledi = false, iyilestirmeDurdur = null;
+  const DEM_URL = "https://api.open-meteo.com/v1/elevation";
 
   function konumOku({ hZorunlu = false } = {}) {
     const phi = JZ.aciOku($("k-phi").value), lam = JZ.aciOku($("k-lam").value);
@@ -393,6 +454,7 @@
     const N = kayit ? kayit.N : null;
     const H = h !== null && N !== null ? G.ortometrik(h, N) : null;
     $("d-h").textContent = m3(h);
+    $("d-h-kaynak").textContent = (h !== null && H_ETIKET[hKaynak]) || "elipsoidal yükseklik";
     $("d-n").textContent = m3(N);
     $("d-hh").textContent = m3(H);
     $("d-n-kaynak").textContent = kayit ? `geoit ondülasyonu (${ETIKET[kaynak]}, ${kayit.model})` : "geoit ondülasyonu";
@@ -441,31 +503,98 @@
     sonucGuncelle();
   }
 
-  function konumDegisti() {            // phi/lambda degisti: eski ICGEM/elle sonuclari bu noktaya ait degil
+  function konumDegisti(kullanici = false) {   // phi/lambda degisti: eski ICGEM/elle sonuclari bu noktaya ait degil
     nKayit.delete("icgem"); nKayit.delete("elle"); $("k-n-elle").value = "";
+    if (kullanici && (hKaynak === "dem" || hKaynak === "msl")) {   // bu h eski noktaya aitti
+      $("k-h").value = ""; hKaynak = null;
+      $("k-h-not").textContent = "Konum değişti: h yeniden belirlenmeli.";
+    }
     izgaraHesapla({ sessiz: true });
   }
+  function iyilestirmeyiBirak() { kullaniciDuzenledi = true; if (iyilestirmeDurdur) iyilestirmeDurdur(); }
   let zamanlayici = null;
-  for (const id of ["k-phi", "k-lam"]) $(id).addEventListener("input", () => { clearTimeout(zamanlayici); zamanlayici = setTimeout(konumDegisti, 300); });
-  $("k-h").addEventListener("input", sonucGuncelle);
+  for (const id of ["k-phi", "k-lam"]) $(id).addEventListener("input", () => {
+    iyilestirmeyiBirak();
+    clearTimeout(zamanlayici); zamanlayici = setTimeout(() => konumDegisti(true), 300);
+  });
+  $("k-h").addEventListener("input", () => {
+    iyilestirmeyiBirak();
+    hKaynak = $("k-h").value.trim() ? "elle" : null;
+    $("k-h-not").textContent = "";
+    sonucGuncelle();
+  });
+
+  function dogrulukMetni(k) {
+    let m = `Yatay doğruluk ±${k.dogruluk.toFixed(0)} m`;
+    if (k.yuk === null) m += ". Cihaz yükseklik vermedi (bilgisayarlarda GPS olmadığı için konum Wi-Fi ya da IP'den gelir).";
+    else m += k.yDogruluk !== null ? `, düşey doğruluk ±${k.yDogruluk.toFixed(0)} m.` : ", düşey doğruluk bildirilmedi.";
+    return m + ` Zaman ${k.zaman.toLocaleTimeString("tr-TR")}.`;
+  }
+
+  function konumUygula(k) {
+    const f = fmtKonum(k);
+    $("k-phi").value = f.phi; $("k-lam").value = f.lam; $("k-h").value = f.h;
+    hKaynak = k.h === null ? null : k.hKaynak;
+    $("k-dogruluk").textContent = dogrulukMetni(k);
+    $("k-h-not").textContent = k.yukTuru === "msl" || k.yuk === null ? k.hNot : "";
+    konumDegisti(false);
+    t1KonumYaz(k); t2KonumYaz(k);
+  }
 
   $("k-konum-al").addEventListener("click", async () => {
     const d = $("k-konum-durum"), btn = $("k-konum-al");
+    if (iyilestirmeDurdur) { kullaniciDuzenledi = true; iyilestirmeDurdur(); }
     btn.disabled = true; durumYaz(d, "Konum isteniyor… (tarayıcı izin sorabilir)");
-    try {
-      const k = await konumIste();
-      const f = fmtKonum(k);
-      $("k-phi").value = f.phi; $("k-lam").value = f.lam; $("k-h").value = f.h;
-      $("k-dogruluk").textContent = `Yatay doğruluk ±${k.dogruluk.toFixed(0)} m` +
-        (k.h === null ? ". Cihaz yükseklik vermedi; h'yi elle yazın." :
-          (Number.isFinite(k.yDogruluk) ? `, düşey doğruluk ±${k.yDogruluk.toFixed(0)} m.` : ", düşey doğruluk bildirilmedi.")) +
-        ` Zaman ${k.zaman.toLocaleTimeString("tr-TR")}.`;
-      konumDegisti();
-      t1KonumYaz(k); t2KonumYaz(k);
-      durumYaz(d, "Konum alındı ve dönüşüm sekmelerine de yazıldı.", "iyi");
-    } catch (e) { durumYaz(d, e.message, "kotu"); }
-    finally { btn.disabled = false; }
+    let k;
+    try { k = await konumIste(); }
+    catch (e) { durumYaz(d, e.message, "kotu"); btn.disabled = false; return; }
+    btn.disabled = false;
+    kullaniciDuzenledi = false;
+    konumUygula(k);
+    const tamam = () => durumYaz(d, "Konum alındı ve dönüşüm sekmelerine de yazıldı.", "iyi");
+    if (k.yuk !== null && k.dogruluk <= 15) { tamam(); return; }
+    durumYaz(d, "Konum alındı. Daha iyi konum ve yükseklik için GPS 20 saniye dinleniyor…", "iyi");
+    iyilestirmeDurdur = konumIyilestir(k,
+      (y) => {
+        if (kullaniciDuzenledi) return;
+        konumUygula(y);
+        durumYaz(d, `GPS konumu güncellendi (±${Math.round(y.dogruluk)} m${y.yuk !== null ? ", yükseklik alındı" : ""}).`, "iyi");
+      },
+      (son) => {
+        iyilestirmeDurdur = null;
+        if (kullaniciDuzenledi) return;
+        if (son.yuk === null) durumYaz(d, "Konum alındı; cihaz yükseklik vermedi. h için arazi modelini kullanın ya da elle yazın.", "iyi");
+        else tamam();
+      });
   });
+
+  // ---- h yoksa: arazi modelinden (Copernicus DEM, EGM2008'e gore) tahmin
+  async function demTahmin() {
+    const d = $("k-konum-durum"), btn = $("k-dem");
+    let k; try { k = konumOku(); } catch (e) { durumYaz(d, "Önce konum alın ya da enlem ve boylam yazın.", "kotu"); return; }
+    const [, kayit] = tercihliN();
+    if (!kayit) {
+      durumYaz(d, "h'yi tahmin etmek için önce bu noktada N gerekli. Gömülü ızgara yalnız Türkiye'yi kapsar; dışarıdaysanız N'yi ICGEM'den isteyin.", "kotu");
+      return;
+    }
+    iyilestirmeyiBirak();
+    btn.disabled = true; durumYaz(d, "Arazi yüksekliği isteniyor (Copernicus DEM, Open-Meteo)…");
+    try {
+      const r = await fetch(`${DEM_URL}?latitude=${k.phi.toFixed(6)}&longitude=${k.lam.toFixed(6)}`);
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !Array.isArray(j.elevation) || !Number.isFinite(j.elevation[0])) throw new Error(j.reason || `HTTP ${r.status}`);
+      const Hdem = j.elevation[0];
+      const h = Hdem + kayit.N - NGA_FARK;
+      $("k-h").value = h.toFixed(3); hKaynak = "dem";
+      $("k-h-not").textContent = `Arazi modeli: ${Hdem.toFixed(1)} m (Copernicus DEM GLO-90, 90 m çözünürlük, EGM2008'e göre). ` +
+        `h = ${Hdem.toFixed(1)} + N − 0.41 = ${h.toFixed(3)} m. Bu bir ölçü değil, tahmindir: model bina ve ağaçları içerebilir, belirsizlik birkaç metredir.`;
+      durumYaz(d, "h arazi modelinden tahmin edildi.", "iyi");
+      sonucGuncelle();
+    } catch (e) {
+      durumYaz(d, "Arazi yüksekliği alınamadı: " + e.message, "kotu");
+    } finally { btn.disabled = false; }
+  }
+  $("k-dem").addEventListener("click", demTahmin);
 
   $("k-izgara").addEventListener("click", () => izgaraHesapla());
 
@@ -629,5 +758,5 @@
     });
 
   // test ve hata ayiklama icin
-  window.KD = { konumIste, izgaraHesapla, datIsle, t1Geo2Cart, t1Cart2Geo, t2Donustur, parametreleriGuncelle, nKayit, get izgaraVeri() { return izgaraVeri; } };
+  window.KD = { konumIste, hBul, demTahmin, get hKaynak() { return hKaynak; }, izgaraHesapla, datIsle, t1Geo2Cart, t1Cart2Geo, t2Donustur, parametreleriGuncelle, nKayit, get izgaraVeri() { return izgaraVeri; } };
 })();
