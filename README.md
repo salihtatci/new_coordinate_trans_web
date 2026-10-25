@@ -57,6 +57,8 @@ Site dosyalarının hepsi aynı klasördedir (alt klasör yok); GitHub'ın web y
 | `.nojekyll` | GitHub Pages'in dosyaları olduğu gibi yayınlaması için |
 | `worker.js`, `wrangler.toml` | İsteğe bağlı otomatik ICGEM proxy'si |
 
+> GitHub Pages dosyaları tarayıcıya 10 dakika önbellekte tutulacak şekilde gönderir. Bu yüzden `index.html` site dosyalarını `app.js?v=…` biçiminde sürüm etiketiyle çağırır. Bir dosyayı güncellediğinizde `index.html`'deki `?v=` etiketini de değiştirin; yoksa ziyaretçiler 10 dakika boyunca eski kodu görebilir.
+
 ## Yayınlama ve yerelde çalıştırma
 
 GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / `(root)`**.
