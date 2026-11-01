@@ -83,6 +83,7 @@
 
   // ================================================================== KONUM (geolocation)
   let izgaraVeri = null, izgaraHata = null;     // gomulu ICGEM izgarasi (asagida yuklenir)
+  let tg20Veri = null, tg20Hata = null;         // gomulu TG-20 izgarasi (HGM hibrit geoidi)
 
   /* Tarayicilarin verdigi yukseklik:
    *  - Android ve digerleri: WGS84 elipsoidine gore (W3C tanimi, Android Location.getAltitude) -> dogrudan h
@@ -523,7 +524,8 @@
   const nKayit = new Map();       // kaynak -> {etiket, model, N}
   let icgemBekleyen = null;       // yeni sekmede gonderilen istek {phi, lam, model}
   let proxyIptal = null;
-  const ETIKET = { icgem: "ICGEM (canlı)", izgara: "Gömülü ICGEM ızgarası", elle: "Elle girilen" };
+  const ETIKET = { icgem: "ICGEM (canlı)", izgara: "Gömülü ICGEM ızgarası", tg20: "TG-20 (HGM, hibrit)", elle: "Elle girilen" };
+  let tercih = null;              // kullanicinin ana gosterim icin sectigi N kaynagi (simdilik yalniz "tg20")
   let hKaynak = null;             // gps | msl | dem | elle
   const H_ETIKET = {
     gps: "elipsoidal yükseklik, cihazın GPS'i",
@@ -547,7 +549,8 @@
   const m3 = (v) => (v === null || v === undefined || !Number.isFinite(v) ? "—" : v.toFixed(3) + " m");
 
   function tercihliN() {
-    for (const k of ["icgem", "elle", "izgara"]) if (nKayit.has(k)) return [k, nKayit.get(k)];
+    if (tercih && nKayit.has(tercih)) return [tercih, nKayit.get(tercih)];
+    for (const k of ["icgem", "elle", "izgara", "tg20"]) if (nKayit.has(k)) return [k, nKayit.get(k)];
     return [null, null];
   }
 
@@ -561,7 +564,7 @@
     $("d-h-kaynak").textContent = (h !== null && H_ETIKET[hKaynak]) || "elipsoidal yükseklik";
     $("d-n").textContent = m3(N);
     $("d-hh").textContent = m3(H);
-    $("d-n-kaynak").textContent = kayit ? `geoit ondülasyonu (${ETIKET[kaynak]}, ${kayit.model})` : "geoit ondülasyonu";
+    $("d-n-kaynak").textContent = kayit ? `geoit ondülasyonu (${ETIKET[kaynak]}${ETIKET[kaynak].includes(kayit.model) ? "" : ", " + kayit.model})` : "geoit ondülasyonu";
     kesitCiz(h, N, H);
 
     const tb = $("k-tablo").tBodies[0];
@@ -572,7 +575,7 @@
       td.textContent = izgaraHata ? `Henüz N hesaplanmadı. (${izgaraHata})` : "Henüz N hesaplanmadı. Konumunuzu alın ya da enlem ve boylam yazın.";
       return;
     }
-    for (const k of ["izgara", "icgem", "elle"]) {
+    for (const k of ["izgara", "tg20", "icgem", "elle"]) {
       if (!nKayit.has(k)) continue;
       const r = nKayit.get(k), tr = tb.insertRow();
       tr.insertCell().textContent = ETIKET[k] + (r.not ? ` (${r.not})` : "");
@@ -586,25 +589,53 @@
       const c = tr.insertCell(); c.className = "sayi"; c.textContent = (fark * 1000).toFixed(1) + " mm";
       tr.insertCell();
     }
+    if (nKayit.has("izgara") && nKayit.has("tg20")) {
+      const tr = tb.insertRow(), fark = nKayit.get("tg20").N - nKayit.get("izgara").N;
+      const td = tr.insertCell(); td.colSpan = 2; td.textContent = "Fark (TG-20 − EGM2008 ızgarası)";
+      const c = tr.insertCell(); c.className = "sayi"; c.textContent = (fark * 100).toFixed(1) + " cm";
+      tr.insertCell();
+    }
+  }
+
+  /** TG-20 (HGM hibrit geoidi) gomulu izgarasindan N.  sec=true: ana gosterimde TG-20 kullanilir. */
+  function tg20Hesapla({ sessiz = false, sec = false } = {}) {
+    const d = $("k-icgem-durum");
+    nKayit.delete("tg20");
+    let k;
+    try { k = konumOku(); } catch (e) { if (!sessiz) durumYaz(d, e.message, "kotu"); sonucGuncelle(); return; }
+    if (!tg20Veri) {
+      if (!sessiz) durumYaz(d, tg20Hata || "TG-20 ızgarası henüz yükleniyor, birkaç saniye sonra tekrar deneyin.", "kotu");
+      sonucGuncelle(); return;
+    }
+    const s = G.izgaraN(k.phi, k.lam, tg20Veri, "bikubik", G.TG20);
+    if (!s) {
+      if (!sessiz) durumYaz(d, "Nokta TG-20 ızgarasının dışında (35°03′–42°58′ K, 25°02′–44°57′ D). TG-20 yalnız Türkiye ve çevresini kapsar.", "kotu");
+      if (sec) tercih = null;
+      sonucGuncelle(); return;
+    }
+    nKayit.set("tg20", { model: "TG-20", N: s.N, not: s.yontem === "bikubik" ? "5′, bikübik" : "5′, bilineer" });
+    if (sec) tercih = "tg20";
+    if (!sessiz) durumYaz(d, "N, TG-20'den (HGM'nin resmî hibrit geoidi) hesaplandı. H artık TÜDKA-99 ortometrik yüksekliği: h, ITRF96 (2005.0) çerçevesinde olmalı; telefonun WGS84 h'si ile fark birkaç santimetredir.", "iyi");
+    sonucGuncelle();
   }
 
   function izgaraHesapla({ sessiz = false } = {}) {
     const d = $("k-icgem-durum");
     nKayit.delete("izgara");
     let k;
-    try { k = konumOku(); } catch (e) { if (!sessiz) durumYaz(d, e.message, "kotu"); sonucGuncelle(); return; }
+    try { k = konumOku(); } catch (e) { if (!sessiz) durumYaz(d, e.message, "kotu"); tg20Hesapla({ sessiz: true }); return; }
     if (!izgaraVeri) {
       if (!sessiz) durumYaz(d, izgaraHata || "Izgara henüz yükleniyor, birkaç saniye sonra tekrar deneyin.", "kotu");
-      sonucGuncelle(); return;
+      tg20Hesapla({ sessiz: true }); return;
     }
     const s = G.izgaraN(k.phi, k.lam, izgaraVeri);
     if (!s) {
       if (!sessiz) durumYaz(d, `Nokta gömülü ızgaranın dışında (${G.IZGARA.guney}–${G.IZGARA.kuzey}° K, ${G.IZGARA.bati}–${G.IZGARA.dogu}° D). N için ICGEM'den isteyin.`, "kotu");
-      sonucGuncelle(); return;
+      tg20Hesapla({ sessiz: true }); return;
     }
     nKayit.set("izgara", { model: G.IZGARA.model, N: s.N, not: s.yontem === "bikubik" ? "1′, bikübik" : "1′, bilineer" });
-    if (!sessiz) durumYaz(d, "N gömülü ICGEM ızgarasından hesaplandı (EGM2008, ICGEM nokta servisine göre ≤1 cm).", "iyi");
-    sonucGuncelle();
+    if (!sessiz) { tercih = null; durumYaz(d, "N gömülü ICGEM ızgarasından hesaplandı (EGM2008, ICGEM nokta servisine göre ≤1 cm).", "iyi"); }
+    tg20Hesapla({ sessiz: true });
   }
 
   function konumDegisti(kullanici = false) {   // phi/lambda degisti: eski ICGEM/elle sonuclari bu noktaya ait degil
@@ -723,6 +754,7 @@
   $("k-dem").addEventListener("click", demTahmin);
 
   $("k-izgara").addEventListener("click", () => izgaraHesapla());
+  $("k-tg20").addEventListener("click", () => tg20Hesapla({ sec: true }));
 
   // ---- ICGEM
   async function icgemProxyIle(k, model) {
@@ -735,7 +767,7 @@
     durumYaz(d, `ICGEM'e istek gönderildi (${model})…`);
     try {
       const j = await G.icgemProxySorgu(AYAR.icgemProxyUrl, k.phi, k.lam, model, { sinyal: proxyIptal.signal });
-      nKayit.set("icgem", { model: j.model || model, N: j.N, not: j.id ? `iş ${String(j.id).slice(0, 8)}` : "" });
+      nKayit.set("icgem", { model: j.model || model, N: j.N, not: j.id ? `iş ${String(j.id).slice(0, 8)}` : "" }); tercih = null;
       durumYaz(d, `ICGEM yanıtı alındı (${Math.round((Date.now() - bas) / 1000)} s).`, "iyi");
       sonucGuncelle();
     } catch (e) {
@@ -801,7 +833,7 @@
       }
     }
     const model = (b.modelname || (icgemBekleyen && icgemBekleyen.model) || "?").replace(/^egm/, "EGM");
-    nKayit.set("icgem", { model, N: n.N, not: ".dat dosyası" });
+    nKayit.set("icgem", { model, N: n.N, not: ".dat dosyası" }); tercih = null;
     durumYaz(d, `ICGEM sonucu okundu: ${model}, N = ${n.N.toFixed(4)} m.`, "iyi");
     sonucGuncelle();
   }
@@ -820,7 +852,7 @@
   $("k-n-elle").addEventListener("input", () => {
     const v = $("k-n-elle").value.trim();
     if (v === "") nKayit.delete("elle");
-    else { try { const N = sayi(v); if (Math.abs(N) > 150) throw new Error("N ±150 m aralığında olmalı."); nKayit.set("elle", { model: "-", N }); } catch (e) { nKayit.delete("elle"); } }
+    else { try { const N = sayi(v); if (Math.abs(N) > 150) throw new Error("N ±150 m aralığında olmalı."); nKayit.set("elle", { model: "-", N }); tercih = null; } catch (e) { nKayit.delete("elle"); } }
     sonucGuncelle();
   });
 
@@ -889,6 +921,8 @@
 
   // ---- izgarayi yukle
   sonucGuncelle();
+  G.izgaraYukle(null, G.TG20).then((v) => { tg20Veri = v; tg20Hata = null; tg20Hesapla({ sessiz: true }); })
+    .catch((e) => { tg20Hata = "TG-20 ızgarası yüklenemedi: " + e.message; });
   G.izgaraYukle().then((v) => { izgaraVeri = v; izgaraHata = null; izgaraHesapla({ sessiz: true }); })
     .catch((e) => {
       izgaraHata = location.protocol === "file:"
@@ -898,5 +932,5 @@
     });
 
   // test ve hata ayiklama icin
-  window.KD = { konumIste, hBul, demTahmin, get hKaynak() { return hKaynak; }, izgaraHesapla, datIsle, t1Geo2Cart, t1Cart2Geo, t2Donustur, parametreleriGuncelle, nKayit, get izgaraVeri() { return izgaraVeri; } };
+  window.KD = { konumIste, hBul, demTahmin, get hKaynak() { return hKaynak; }, izgaraHesapla, tg20Hesapla, datIsle, t1Geo2Cart, t1Cart2Geo, t2Donustur, parametreleriGuncelle, nKayit, get izgaraVeri() { return izgaraVeri; }, get tg20Veri() { return tg20Veri; } };
 })();

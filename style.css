@@ -234,6 +234,11 @@ p.durum { margin: 10px 0 0; }
 .dosya-sec:hover span { background: var(--secondary); }
 .dosya-sec input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 2px; }
 
+.tg20-satir { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.tg20-satir > div { flex: 1 1 260px; min-width: 0; }
+.tg20-satir h4 { margin: 0; font-size: .875rem; font-weight: 600; }
+.tg20-satir .kucuk { margin-top: 3px; }
+
 /* sonuc karti: kesit + degerler */
 .kesit-kart { position: sticky; top: 80px; padding: 0; overflow: hidden; }
 .kesit { margin: 0; }

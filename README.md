@@ -42,6 +42,15 @@ ICGEM (GFZ Potsdam) herkese açık bir API sunmaz ve tarayıcılara başka sitel
 
 ICGEM ayarları: fonksiyonel `geoid`, referans sistem WGS84, sıfırıncı derece terimi dahil, modelin kendi gelgit sistemi. Modeller: EGM2008 (varsayılan), XGM2019e_2159, EIGEN-6C4, SGG-UGM-2, EGM96.
 
+### TG-20 (Türkiye Geoit Modeli 2020)
+
+**Geoit ondülasyonu (N)** kartındaki **TG-20 ile hesapla** düğmesi N'yi HGM'nin resmî hibrit geoidinden alır; H bu durumda Türkiye'nin resmî yükseklik sistemindeki (TÜDKA-99) ortometrik yüksekliktir. TG-20 her konumda karşılaştırma tablosuna da kendiliğinden eklenir, EGM2008 ile farkı ayrı satırda gösterilir.
+
+- Izgara: 5′ aralık, 35°03′–42°58′ K, 25°02′–44°57′ D (96 × 240), santimetre hassasiyeti, bikübik enterpolasyon. İnternetsiz çalışır.
+- Referans: GRS80, ITRF96 (epok 2005.0, TUREF), zero-tide. TG-20 ile kullanılacak h bu çerçevede olmalıdır.
+- Kaynak: [ISG, Turkey 2020 (TG-20)](https://isgeoid.polimi.it/Geoid/Europe/Turkey/turkey_2020_g.html). Düğüm koordinatları HGM'nin orijinal `TG_20.xyz` dosyasıyla doğrulandı.
+- Atıf: Yıldız H., Simav M., Sezen E., Akpınar İ., Akdoğan Y.A., Cingöz A., Akabalı O.A. (2020). *The Turkish hybrid geoid: TG-20*. V. 1.0. GFZ Data Services. [doi:10.5880/isg.2020.011](https://doi.org/10.5880/isg.2020.011). Lisans: CC BY 4.0.
+
 ## Dosyalar
 
 Site dosyalarının hepsi aynı klasördedir (alt klasör yok); GitHub'ın web yükleyicisiyle doğrudan köke yüklenebilir.
@@ -55,6 +64,7 @@ Site dosyalarının hepsi aynı klasördedir (alt klasör yok); GitHub'ın web y
 | `app.js` | Arayüz ve konum servisi |
 | `config.js` | İsteğe bağlı ICGEM proxy adresi |
 | `egm2008_tr_1dk.bin` | ICGEM EGM2008 geoit ızgarası (Türkiye, 1′, 0.99 MB) |
+| `tg20_tr_5dk.bin` | TG-20 hibrit geoit ızgarası (HGM, 5′, 46 KB; uint16, mm, kuzeyden güneye) |
 | `.nojekyll` | GitHub Pages'in dosyaları olduğu gibi yayınlaması için |
 | `worker.js`, `wrangler.toml` | İsteğe bağlı otomatik ICGEM proxy'si |
 

@@ -1,8 +1,10 @@
 /*
  * geoit.js - Geoit ondulasyonu (N) ve ortometrik yukseklik (H = h - N)
  * =====================================================================
- * Uc N kaynagi:
+ * N kaynaklari:
  *   1) Gomulu ICGEM izgarasi : EGM2008, 1' aralik, Turkiye (ICGEM hesap servisinden alindi).
+ *   1b) Gomulu TG-20 izgarasi: HGM'nin resmi hibrit geoidi, 5' aralik (ISG, CC BY 4.0).
+ *                              TUDKA-99 yuksekliklerine uyarlanmistir; h ITRF96 (2005.0) / GRS80.
  *   2) ICGEM canli (otomatik): ICGEM CORS izni vermedigi icin bir proxy gerekir
  *                              (icgem-proxy/ klasorundeki Cloudflare Worker).
  *   3) ICGEM canli (yeni sekme): form ICGEM'e gonderilir, sonuc .dat dosyasi siteye birakilir.
@@ -35,26 +37,47 @@
     olusturma: "2026-10-25",
   };
 
+  /** tg20_tr_5dk.bin: TG-20 (Turkiye Geoit Modeli 2020, HGM), ayni bicim (uint16 LE, mm,
+   *  kuzeyden guneye, batidan doguya).  Kaynak: ISG, Turkey_2020_TG-20_hybrG_20220608.isg
+   *  (degerler cm hassasiyetinde).  Dugum koordinatlari ISG basligi ve HGM'nin orijinal
+   *  TG_20.xyz dosyasiyla dogrulandi: 35°03'..42°58' K, 25°02'..44°57' D, 5' aralik. */
+  const TG20 = {
+    dosya: "tg20_tr_5dk.bin",
+    model: "TG-20",
+    tur: "hibrit geoit (HGM)",
+    referans: "GRS80, ITRF96 (2005.0)",
+    yukseklikDatumu: "TUDKA-99",
+    gelgit: "zero-tide",
+    kuzey: 42 + 58 / 60, guney: 35 + 3 / 60, bati: 25 + 2 / 60, dogu: 44 + 57 / 60,
+    adim: 5 / 60,
+    satir: 96, sutun: 240,
+    olcek: 0.001,               // mm -> m
+    kaynakUrl: "https://isgeoid.polimi.it/Geoid/Europe/Turkey/turkey_2020_g.html",
+    atif: "Yildiz H., Simav M., Sezen E., Akpinar I., Akdogan Y.A., Cingoz A., Akabali O.A. (2020). " +
+      "The Turkish hybrid geoid: TG-20. V. 1.0. GFZ Data Services. doi:10.5880/isg.2020.011 (CC BY 4.0)",
+  };
+
   /** ArrayBuffer -> Float64Array (metre). Boyut tutmazsa hata verir. */
-  function izgaraCoz(buf) {
-    const beklenen = IZGARA.satir * IZGARA.sutun * 2;
+  function izgaraCoz(buf, tanim = IZGARA) {
+    const beklenen = tanim.satir * tanim.sutun * 2;
     if (buf.byteLength !== beklenen)
       throw new Error(`Izgara boyutu hatali: ${buf.byteLength} bayt (beklenen ${beklenen})`);
     const dv = new DataView(buf);
-    const n = IZGARA.satir * IZGARA.sutun;
+    const n = tanim.satir * tanim.sutun;
     const v = new Float64Array(n);
-    for (let i = 0; i < n; i++) v[i] = dv.getUint16(2 * i, true) * IZGARA.olcek;
+    for (let i = 0; i < n; i++) v[i] = dv.getUint16(2 * i, true) * tanim.olcek;
     return v;
   }
 
-  async function izgaraYukle(url = IZGARA.dosya) {
-    const r = await fetch(url);
+  async function izgaraYukle(url, tanim = IZGARA) {
+    const r = await fetch(url || tanim.dosya);
     if (!r.ok) throw new Error(`Izgara indirilemedi (${r.status})`);
-    return izgaraCoz(await r.arrayBuffer());
+    return izgaraCoz(await r.arrayBuffer(), tanim);
   }
 
-  function izgaraIcinde(phi, lam) {
-    return phi >= IZGARA.guney && phi <= IZGARA.kuzey && lam >= IZGARA.bati && lam <= IZGARA.dogu;
+  function izgaraIcinde(phi, lam, tanim = IZGARA) {
+    const e = 1e-6;              // ~0.004": kaynak dosyalardaki koordinat yuvarlamasi
+    return phi >= tanim.guney - e && phi <= tanim.kuzey + e && lam >= tanim.bati - e && lam <= tanim.dogu + e;
   }
 
   // Keys (1981) kubik evrisim cekirdegi, a = -0.5
@@ -65,12 +88,13 @@
     return 0;
   }
 
-  /** Izgaradan N (m). yontem: "bikubik" (varsayilan) | "bilineer". Disarida ise null. */
-  function izgaraN(phi, lam, veri, yontem = "bikubik") {
-    if (!veri || !Number.isFinite(phi) || !Number.isFinite(lam) || !izgaraIcinde(phi, lam)) return null;
-    const { satir: NR, sutun: NC, kuzey, bati, adim } = IZGARA;
-    const y = (kuzey - phi) / adim;          // satir (0 = kuzey)
-    const x = (lam - bati) / adim;           // sutun (0 = bati)
+  /** Izgaradan N (m). yontem: "bikubik" (varsayilan) | "bilineer". Disarida ise null.
+   *  tanim: IZGARA (EGM2008, varsayilan) ya da TG20. */
+  function izgaraN(phi, lam, veri, yontem = "bikubik", tanim = IZGARA) {
+    if (!veri || !Number.isFinite(phi) || !Number.isFinite(lam) || !izgaraIcinde(phi, lam, tanim)) return null;
+    const { satir: NR, sutun: NC, kuzey, bati, adim } = tanim;
+    const y = Math.max(0, (kuzey - phi) / adim);   // satir (0 = kuzey)
+    const x = Math.max(0, (lam - bati) / adim);    // sutun (0 = bati)
     const r0 = Math.min(Math.floor(y), NR - 2), c0 = Math.min(Math.floor(x), NC - 2);
     const fy = y - r0, fx = x - c0;
     const deger = (r, c) => veri[r * NC + c];
@@ -202,7 +226,7 @@
   }
 
   return {
-    IZGARA, izgaraCoz, izgaraYukle, izgaraIcinde, izgaraN,
+    IZGARA, TG20, izgaraCoz, izgaraYukle, izgaraIcinde, izgaraN,
     ICGEM_URL, ICGEM_MODELLER, icgemAlanlari, noktaDosyasi, icgemYeniSekmede, icgemDatOku, icgemProxySorgu,
     ortometrik,
   };
