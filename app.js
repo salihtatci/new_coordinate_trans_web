@@ -615,7 +615,7 @@
     }
     nKayit.set("tg20", { model: "TG-20", N: s.N, not: s.yontem === "bikubik" ? "5′, bikübik" : "5′, bilineer" });
     if (sec) tercih = "tg20";
-    if (!sessiz) durumYaz(d, "N, TG-20'den (HGM'nin resmî hibrit geoidi) hesaplandı. H artık TÜDKA-99 ortometrik yüksekliği: h, ITRF96 (2005.0) çerçevesinde olmalı; telefonun WGS84 h'si ile fark birkaç santimetredir.", "iyi");
+    if (!sessiz) durumYaz(d, "N, TG-20'den (HGM'nin resmî hibrit geoidi) hesaplandı. H artık TUDKA-99 ortometrik yüksekliği: h, ITRF96 (2005.0) çerçevesinde olmalı; telefonun WGS84 h'si ile fark birkaç santimetredir.", "iyi");
     sonucGuncelle();
   }
 

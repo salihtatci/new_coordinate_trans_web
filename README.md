@@ -44,7 +44,7 @@ ICGEM ayarları: fonksiyonel `geoid`, referans sistem WGS84, sıfırıncı derec
 
 ### TG-20 (Türkiye Geoit Modeli 2020)
 
-**Geoit ondülasyonu (N)** kartındaki **TG-20 ile hesapla** düğmesi N'yi HGM'nin resmî hibrit geoidinden alır; H bu durumda Türkiye'nin resmî yükseklik sistemindeki (TÜDKA-99) ortometrik yüksekliktir. TG-20 her konumda karşılaştırma tablosuna da kendiliğinden eklenir, EGM2008 ile farkı ayrı satırda gösterilir.
+**Geoit ondülasyonu (N)** kartındaki **TG-20 ile hesapla** düğmesi N'yi HGM'nin resmî hibrit geoidinden alır; H bu durumda Türkiye'nin resmî yükseklik sistemindeki (TUDKA-99) ortometrik yüksekliktir. TG-20 her konumda karşılaştırma tablosuna da kendiliğinden eklenir, EGM2008 ile farkı ayrı satırda gösterilir.
 
 - Izgara: 5′ aralık, 35°03′–42°58′ K, 25°02′–44°57′ D (96 × 240), santimetre hassasiyeti, bikübik enterpolasyon. İnternetsiz çalışır.
 - Referans: GRS80, ITRF96 (epok 2005.0, TUREF), zero-tide. TG-20 ile kullanılacak h bu çerçevede olmalıdır.
