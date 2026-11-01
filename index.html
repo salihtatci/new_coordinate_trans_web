@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Koordinat Dönüşümü</title>
   <meta name="description" content="Tarayıcıda çalışan jeodezik koordinat dönüşümü: coğrafi ve kartezyen koordinatlar, Bursa-Wolf, Molodensky-Badekas, IERS 14 parametre, konumdan ICGEM geoit ondülasyonu ve ortometrik yükseklik.">
-  <meta name="theme-color" content="#F7F9F6" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#17201F" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09090B" media="(prefers-color-scheme: dark)">
   <script>
     /* secilen tema (Acik / Koyu) sayfa cizilmeden uygulanir; secim yoksa cihazin ayari gecerlidir */
     (function () {
@@ -19,120 +19,163 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231F6B57'/%3E%3Cpath d='M4 18c6-5 18-5 24 0' stroke='%23F0BE2E' stroke-width='3' fill='none'/%3E%3Ccircle cx='16' cy='11' r='3' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <!-- ?v= surum etiketi: dosyalar guncellenince degistirin; tarayici onbellekteki eski dosyayi kullanmasin -->
-  <link rel="stylesheet" href="style.css?v=20261025-tema">
+  <link rel="stylesheet" href="style.css?v=20261101-shadcn">
 </head>
 <body>
+  <!-- ikonlar: Lucide (ISC lisansi), <use href="#i-..."> ile kullanilir -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-locate" viewBox="0 0 24 24"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+    <symbol id="i-mountain" viewBox="0 0 24 24"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></symbol>
+    <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></symbol>
+  </svg>
+
   <header class="ust">
     <div class="ust-ic">
-      <div>
+      <div class="marka">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#1F6B57"/><path d="M4 18c6-5 18-5 24 0" stroke="#F0BE2E" stroke-width="3" fill="none"/><circle cx="16" cy="11" r="3" fill="#fff"/></svg>
         <h1>Koordinat Dönüşümü</h1>
-        <p class="alt-baslik">Konumdan ortometrik yüksekliğe, coğrafi ve kartezyen koordinatlardan ITRF, ETRF, WGS84 ve ED50 dönüşümlerine. Hesaplar tarayıcınızda yapılır.</p>
       </div>
+      <nav class="sekmeler" role="tablist" aria-label="Bölümler">
+        <button role="tab" id="sekme-konum" aria-controls="panel-konum" aria-selected="true"><svg class="ikon" aria-hidden="true"><use href="#i-pin"/></svg>Konum ve yükseklik</button>
+        <button role="tab" id="sekme-cografi" aria-controls="panel-cografi" aria-selected="false" tabindex="-1"><svg class="ikon" aria-hidden="true"><use href="#i-globe"/></svg>Coğrafi ⇄ Kartezyen</button>
+        <button role="tab" id="sekme-datum" aria-controls="panel-datum" aria-selected="false" tabindex="-1"><svg class="ikon" aria-hidden="true"><use href="#i-layers"/></svg>Datum ve çerçeve</button>
+        <button role="tab" id="sekme-bilgi" aria-controls="panel-bilgi" aria-selected="false" tabindex="-1"><svg class="ikon" aria-hidden="true"><use href="#i-info"/></svg>Bilgi</button>
+      </nav>
       <div class="ust-sag">
         <div class="tema" role="group" aria-label="Tema">
-          <button type="button" data-tema="sistem" aria-pressed="true" title="Cihazın açık / koyu ayarını izler">Sistem</button>
-          <button type="button" data-tema="light" aria-pressed="false">Açık</button>
-          <button type="button" data-tema="dark" aria-pressed="false">Koyu</button>
+          <button type="button" data-tema="sistem" aria-pressed="true" title="Sistem: cihazın açık / koyu ayarını izler"><svg class="ikon" aria-hidden="true"><use href="#i-monitor"/></svg><span class="sr-only">Sistem</span></button>
+          <button type="button" data-tema="light" aria-pressed="false" title="Açık tema"><svg class="ikon" aria-hidden="true"><use href="#i-sun"/></svg><span class="sr-only">Açık</span></button>
+          <button type="button" data-tema="dark" aria-pressed="false" title="Koyu tema"><svg class="ikon" aria-hidden="true"><use href="#i-moon"/></svg><span class="sr-only">Koyu</span></button>
         </div>
-        <a class="depo" href="https://github.com/salihtatci/coordinate_transformation">Kaynak kod</a>
+        <a class="depo" href="https://github.com/salihtatci/coordinate_transformation" title="Kaynak kod (GitHub)"><svg class="ikon" aria-hidden="true"><use href="#i-github"/></svg><span>Kaynak kod</span></a>
       </div>
     </div>
-    <nav class="sekmeler" role="tablist" aria-label="Bölümler">
-      <button role="tab" id="sekme-konum" aria-controls="panel-konum" aria-selected="true">Konum ve yükseklik</button>
-      <button role="tab" id="sekme-cografi" aria-controls="panel-cografi" aria-selected="false" tabindex="-1">Coğrafi ⇄ Kartezyen</button>
-      <button role="tab" id="sekme-datum" aria-controls="panel-datum" aria-selected="false" tabindex="-1">Datum ve çerçeve</button>
-      <button role="tab" id="sekme-bilgi" aria-controls="panel-bilgi" aria-selected="false" tabindex="-1">Bilgi</button>
-    </nav>
   </header>
 
   <main>
     <!-- ================= KONUM VE YUKSEKLIK ================= -->
     <section id="panel-konum" role="tabpanel" aria-labelledby="sekme-konum" class="panel">
+      <div class="panel-bas">
+        <h2>Bulunduğunuz noktanın ortometrik yüksekliği</h2>
+        <p class="aciklama">Konum izni verirseniz cihazınızın verdiği enlem, boylam ve elipsoidal yükseklik (h) aşağıya ve dönüşüm sekmelerine yazılır. Geoit ondülasyonu (N) ICGEM'den alınır, ortometrik yükseklik H = h − N ile hesaplanır.</p>
+      </div>
+
       <div class="konum-izgara">
-        <div class="konum-form">
-          <h2>Bulunduğunuz noktanın ortometrik yüksekliği</h2>
-          <p class="aciklama">Konum izni verirseniz cihazınızın verdiği enlem, boylam ve elipsoidal yükseklik (h) aşağıya ve dönüşüm sekmelerine yazılır. Geoit ondülasyonu (N) ICGEM'den alınır, ortometrik yükseklik H = h − N ile hesaplanır.</p>
-
-          <div class="satir-dugme">
-            <button id="k-konum-al" class="birincil" type="button">Konumumu al</button>
-            <span id="k-konum-durum" class="durum" role="status" aria-live="polite"></span>
-          </div>
-          <div id="k-izin-yardim" class="izin-yardim" hidden></div>
-
-          <div class="form-izgara uc">
-            <label for="k-phi">Enlem φ</label>
-            <input id="k-phi" inputmode="decimal" autocomplete="off" placeholder="39.925 veya 39 55 30">
-            <label for="k-lam">Boylam λ</label>
-            <input id="k-lam" inputmode="decimal" autocomplete="off" placeholder="32.8369 veya 32 50 12.84">
-            <label for="k-h">Elipsoidal yükseklik h (m)</label>
-            <input id="k-h" inputmode="decimal" autocomplete="off" placeholder="WGS84 elipsoidine göre">
-          </div>
-          <p id="k-dogruluk" class="kucuk"></p>
-          <div class="satir-dugme h-yok">
-            <button id="k-dem" type="button">h'yi arazi modelinden tahmin et</button>
-            <span class="kucuk">GPS'i olmayan bilgisayarlar için: Copernicus DEM yüksekliği + N</span>
-          </div>
-          <p id="k-h-not" class="kucuk" aria-live="polite"></p>
-
-          <fieldset class="kaynak">
-            <legend>Geoit ondülasyonu (N)</legend>
-            <div class="form-izgara">
-              <label for="k-model">Yer gravite modeli</label>
-              <select id="k-model"></select>
+        <div>
+          <div class="kart">
+            <div class="kart-bas">
+              <div><h3>Konum</h3><p>Ondalık derece ya da derece dakika saniye yazabilirsiniz.</p></div>
             </div>
             <div class="satir-dugme">
-              <button id="k-icgem" class="birincil" type="button">ICGEM'den iste</button>
-              <button id="k-izgara" type="button">Gömülü ızgaradan hesapla</button>
+              <button id="k-konum-al" class="birincil" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-locate"/></svg>Konumumu al</button>
+              <span id="k-konum-durum" class="durum" role="status" aria-live="polite"></span>
+            </div>
+            <div id="k-izin-yardim" class="izin-yardim" hidden></div>
+
+            <div class="alanlar s3">
+              <div class="alan"><label for="k-phi">Enlem φ</label><input id="k-phi" class="sayi-giris" inputmode="decimal" autocomplete="off" placeholder="39.925"></div>
+              <div class="alan"><label for="k-lam">Boylam λ</label><input id="k-lam" class="sayi-giris" inputmode="decimal" autocomplete="off" placeholder="32.8369"></div>
+              <div class="alan"><label for="k-h">h (m)</label><input id="k-h" class="sayi-giris" inputmode="decimal" autocomplete="off" placeholder="WGS84 elipsoidi"></div>
+            </div>
+            <p id="k-dogruluk" class="kucuk"></p>
+            <hr class="ayrac">
+            <div class="satir-dugme h-yok">
+              <button id="k-dem" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-mountain"/></svg>h'yi arazi modelinden tahmin et</button>
+            </div>
+            <p class="kucuk">GPS'i olmayan bilgisayarlar için: Copernicus DEM yüksekliği + N</p>
+            <p id="k-h-not" class="kucuk" aria-live="polite"></p>
+          </div>
+
+          <div class="kart">
+            <div class="kart-bas">
+              <div><h3>Geoit ondülasyonu (N)</h3><p>Seçilen küresel yer gravite modelinden hesaplanır.</p></div>
+            </div>
+            <div class="alanlar">
+              <div class="alan"><label for="k-model">Yer gravite modeli</label><select id="k-model"></select></div>
+            </div>
+            <div class="satir-dugme iki">
+              <button id="k-icgem" class="birincil" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-cloud"/></svg>ICGEM'den iste</button>
+              <button id="k-izgara" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-grid"/></svg>Gömülü ızgaradan hesapla</button>
             </div>
             <p id="k-icgem-durum" class="durum" role="status" aria-live="polite"></p>
             <div id="k-dat-alani" class="dat-alani" hidden>
               <p>ICGEM sekmesinde hesap bitince <b>results</b> bağlantısına, ardından <b>Points data</b> ile inen <code>.dat</code> dosyasına geçin. Dosyayı buraya bırakın ya da seçin:</p>
               <label class="dosya-sec">
                 <input id="k-dat" type="file" accept=".dat,.txt,text/plain">
-                <span>ICGEM .dat dosyası seç</span>
+                <span><svg class="ikon" aria-hidden="true"><use href="#i-upload"/></svg>ICGEM .dat dosyası seç</span>
               </label>
-              <div class="form-izgara elle">
-                <label for="k-n-elle">ya da N değerini yazın (m)</label>
-                <input id="k-n-elle" inputmode="decimal" autocomplete="off" placeholder="örn. 37.6026">
+              <div class="alanlar">
+                <div class="alan"><label for="k-n-elle">ya da N değerini yazın (m)</label><input id="k-n-elle" class="sayi-giris" inputmode="decimal" autocomplete="off" placeholder="örn. 37.6026"></div>
               </div>
             </div>
-          </fieldset>
+          </div>
         </div>
 
-        <figure class="kesit" aria-labelledby="kesit-yazi">
-          <svg id="kesit" viewBox="0 0 400 300" role="img" aria-labelledby="kesit-baslik kesit-yazi">
-            <title id="kesit-baslik">Yükseklik kesiti: elipsoit, geoit ve topoğrafya</title>
-            <path id="ks-arazi" class="ks-arazi" d=""/>
-            <path id="ks-geoit" class="ks-geoit" d=""/>
-            <path id="ks-elipsoit" class="ks-elipsoit" d=""/>
-            <g id="ks-oklar"></g>
-            <circle id="ks-nokta" class="ks-nokta" r="6" cx="250" cy="70"/>
-            <text id="ks-p" class="ks-etiket" x="262" y="62">P</text>
-            <text class="ks-yuzey" id="ks-yazi-arazi" x="12" y="40">Topoğrafya</text>
-            <text class="ks-yuzey geoit" id="ks-yazi-geoit" x="12" y="0">Geoit</text>
-            <text class="ks-yuzey elipsoit" id="ks-yazi-elipsoit" x="12" y="0">Elipsoit (WGS84)</text>
-          </svg>
-          <figcaption id="kesit-yazi">
-            <dl class="degerler">
-              <div><dt>h</dt><dd id="d-h">—</dd><dd class="birim" id="d-h-kaynak">elipsoidal yükseklik</dd></div>
-              <div><dt>N</dt><dd id="d-n">—</dd><dd class="birim" id="d-n-kaynak">geoit ondülasyonu</dd></div>
-              <div class="vurgu"><dt>H</dt><dd id="d-hh">—</dd><dd class="birim">ortometrik yükseklik, H = h − N</dd></div>
-            </dl>
-          </figcaption>
-        </figure>
+        <div class="kart kesit-kart">
+          <div class="ana-deger" aria-hidden="true">
+            <div>
+              <div class="etiket">Ortometrik yükseklik</div>
+              <div class="buyuk"><span id="d-hh-buyuk">—</span><small>m</small></div>
+            </div>
+            <span class="formul">H = h − N</span>
+          </div>
+          <figure class="kesit" aria-labelledby="kesit-yazi">
+            <svg id="kesit" viewBox="0 0 400 300" role="img" aria-labelledby="kesit-baslik kesit-yazi">
+              <title id="kesit-baslik">Yükseklik kesiti: elipsoit, geoit ve topoğrafya</title>
+              <path id="ks-arazi" class="ks-arazi" d=""/>
+              <path id="ks-geoit" class="ks-geoit" d=""/>
+              <path id="ks-elipsoit" class="ks-elipsoit" d=""/>
+              <g id="ks-oklar"></g>
+              <circle id="ks-nokta" class="ks-nokta" r="6" cx="250" cy="70"/>
+              <text id="ks-p" class="ks-etiket" x="262" y="62">P</text>
+              <text class="ks-yuzey" id="ks-yazi-arazi" x="12" y="40">Topoğrafya</text>
+              <text class="ks-yuzey geoit" id="ks-yazi-geoit" x="12" y="0">Geoit</text>
+              <text class="ks-yuzey elipsoit" id="ks-yazi-elipsoit" x="12" y="0">Elipsoit (WGS84)</text>
+            </svg>
+            <figcaption id="kesit-yazi">
+              <dl class="degerler">
+                <div><dt>h</dt><dd id="d-h">—</dd><dd class="birim" id="d-h-kaynak">elipsoidal yükseklik</dd></div>
+                <div><dt>N</dt><dd id="d-n">—</dd><dd class="birim" id="d-n-kaynak">geoit ondülasyonu</dd></div>
+                <div class="vurgu"><dt>H</dt><dd id="d-hh">—</dd><dd class="birim">ortometrik yükseklik, H = h − N</dd></div>
+              </dl>
+            </figcaption>
+          </figure>
+        </div>
       </div>
 
-      <div class="sonuc-alani">
-        <h3>Karşılaştırma</h3>
-        <table class="tablo" id="k-tablo">
-          <thead><tr><th scope="col">N kaynağı</th><th scope="col">Model</th><th scope="col" class="sayi">N (m)</th><th scope="col" class="sayi">H = h − N (m)</th></tr></thead>
-          <tbody><tr class="bos"><td colspan="4">Henüz N hesaplanmadı. Konumunuzu alın ya da enlem ve boylam yazın.</td></tr></tbody>
-        </table>
+      <div class="kart sonuc-alani">
+        <div class="kart-bas">
+          <div><h3>Karşılaştırma</h3><p>Her N kaynağı için bulunan değer ve ona göre H.</p></div>
+        </div>
+        <div class="tablo-kap">
+          <table class="tablo" id="k-tablo">
+            <thead><tr><th scope="col">N kaynağı</th><th scope="col">Model</th><th scope="col" class="sayi">N (m)</th><th scope="col" class="sayi">H = h − N (m)</th></tr></thead>
+            <tbody><tr class="bos"><td colspan="4">Henüz N hesaplanmadı. Konumunuzu alın ya da enlem ve boylam yazın.</td></tr></tbody>
+          </table>
+        </div>
         <div class="satir-dugme">
-          <button id="k-aktar-cografi" type="button">Konumu Coğrafi ⇄ Kartezyen sekmesine yaz</button>
-          <button id="k-aktar-datum" type="button">Konumu Datum ve çerçeve sekmesine yaz</button>
+          <button id="k-aktar-cografi" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-globe"/></svg>Konumu Coğrafi ⇄ Kartezyen sekmesine yaz</button>
+          <button id="k-aktar-datum" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-layers"/></svg>Konumu Datum ve çerçeve sekmesine yaz</button>
         </div>
         <p class="kucuk notlar">H burada seçilen küresel modelin geoidine göre hesaplanır; Türkiye'nin resmî yükseklik sistemi (TUDKA-99) ve TG-20 hibrit geoidiyle onlarca santimetre fark edebilir. Telefonların verdiği yükseklik genellikle ±5–15 m belirsizdir; hassas iş için h'yi GNSS ölçünüzden yazın.</p>
       </div>
@@ -140,91 +183,138 @@
 
     <!-- ================= COGRAFI <-> KARTEZYEN ================= -->
     <section id="panel-cografi" role="tabpanel" aria-labelledby="sekme-cografi" class="panel" hidden>
+      <div class="panel-bas">
+        <h2>Coğrafi ⇄ Kartezyen</h2>
+        <p class="aciklama">Aynı noktanın φ, λ, h ve X, Y, Z gösterimleri arasında seçilen elipsoitte dönüşüm. Rapor her adımın formülünü ve ara değerlerini gösterir.</p>
+      </div>
       <div class="iki-sutun">
         <div>
-          <div class="form-izgara">
-            <label for="t1-elips">Elipsoit</label>
-            <select id="t1-elips"></select>
-            <label for="t1-yontem">Ters çözüm yöntemi</label>
-            <select id="t1-yontem"><option value="iteratif">iteratif</option><option value="bowring">bowring</option></select>
+          <div class="kart">
+            <div class="alanlar s2">
+              <div class="alan"><label for="t1-elips">Elipsoit</label><select id="t1-elips"></select></div>
+              <div class="alan"><label for="t1-yontem">Ters çözüm yöntemi</label><select id="t1-yontem"><option value="iteratif">iteratif</option><option value="bowring">bowring</option></select></div>
+            </div>
           </div>
-          <div class="satir-dugme"><button id="t1-konum" type="button">Konumumu kullan</button><span id="t1-konum-durum" class="durum" role="status" aria-live="polite"></span></div>
-          <div id="t1-izin-yardim" class="izin-yardim" hidden></div>
-          <div class="form-izgara">
-            <label for="t1-phi">Enlem φ</label>
-            <input id="t1-phi" inputmode="decimal" autocomplete="off" value="39 55 30.0" placeholder="39.925 veya 39 55 30.0">
-            <label for="t1-lam">Boylam λ</label>
-            <input id="t1-lam" inputmode="decimal" autocomplete="off" value="32 50 12.84" placeholder="32.8369 veya 32 50 12.84">
-            <label for="t1-h">Elipsoidal yükseklik h (m)</label>
-            <input id="t1-h" inputmode="decimal" autocomplete="off" value="938.000">
+
+          <div class="kart">
+            <div class="kart-bas">
+              <div><h3>Coğrafi koordinatlar</h3><p>φ ve λ ondalık derece ya da derece dakika saniye.</p></div>
+              <button id="t1-konum" type="button" class="hayalet"><svg class="ikon" aria-hidden="true"><use href="#i-locate"/></svg>Konumumu kullan</button>
+            </div>
+            <span id="t1-konum-durum" class="durum" role="status" aria-live="polite"></span>
+            <div id="t1-izin-yardim" class="izin-yardim" hidden></div>
+            <div class="alanlar s3">
+              <div class="alan"><label for="t1-phi">Enlem φ</label><input id="t1-phi" class="sayi-giris" inputmode="decimal" autocomplete="off" value="39 55 30.0" placeholder="39.925"></div>
+              <div class="alan"><label for="t1-lam">Boylam λ</label><input id="t1-lam" class="sayi-giris" inputmode="decimal" autocomplete="off" value="32 50 12.84" placeholder="32.8369"></div>
+              <div class="alan"><label for="t1-h">h (m)</label><input id="t1-h" class="sayi-giris" inputmode="decimal" autocomplete="off" value="938.000"></div>
+            </div>
+            <button id="t1-g2c" class="birincil tam" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-arrow-down"/></svg>Coğrafi → Kartezyen</button>
           </div>
-          <button id="t1-g2c" class="birincil tam" type="button">Coğrafi → Kartezyen</button>
-          <div class="form-izgara">
-            <label for="t1-x">X (m)</label><input id="t1-x" inputmode="decimal" autocomplete="off">
-            <label for="t1-y">Y (m)</label><input id="t1-y" inputmode="decimal" autocomplete="off">
-            <label for="t1-z">Z (m)</label><input id="t1-z" inputmode="decimal" autocomplete="off">
+
+          <div class="kart">
+            <div class="kart-bas">
+              <div><h3>Kartezyen koordinatlar</h3><p>Yer merkezli X, Y, Z (m).</p></div>
+            </div>
+            <div class="alanlar s3">
+              <div class="alan"><label for="t1-x">X (m)</label><input id="t1-x" inputmode="decimal" autocomplete="off"></div>
+              <div class="alan"><label for="t1-y">Y (m)</label><input id="t1-y" inputmode="decimal" autocomplete="off"></div>
+              <div class="alan"><label for="t1-z">Z (m)</label><input id="t1-z" inputmode="decimal" autocomplete="off"></div>
+            </div>
+            <button id="t1-c2g" class="birincil tam" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-arrow-up"/></svg>Kartezyen → Coğrafi</button>
           </div>
-          <button id="t1-c2g" class="birincil tam" type="button">Kartezyen → Coğrafi</button>
         </div>
-        <pre id="t1-out" class="rapor" aria-live="polite" tabindex="0">Bir dönüşüm seçin; formüller ve ara değerler burada görünür.</pre>
+
+        <div class="kart rapor-kart">
+          <div class="rapor-bas">
+            <h3><svg class="ikon" aria-hidden="true"><use href="#i-terminal"/></svg>Hesap raporu</h3>
+            <button type="button" class="hayalet kopyala" data-hedef="t1-out"><svg class="ikon" aria-hidden="true"><use href="#i-copy"/></svg><span>Kopyala</span></button>
+          </div>
+          <pre id="t1-out" class="rapor" aria-live="polite" tabindex="0">Bir dönüşüm seçin; formüller ve ara değerler burada görünür.</pre>
+        </div>
       </div>
     </section>
 
     <!-- ================= DATUM VE CERCEVE ================= -->
     <section id="panel-datum" role="tabpanel" aria-labelledby="sekme-datum" class="panel" hidden>
+      <div class="panel-bas">
+        <h2>Datum ve çerçeve dönüşümü</h2>
+        <p class="aciklama">ITRF, ETRF, WGS84 ve ED50 arasında Helmert dönüşümleri. Parametreler kaynak, hedef ve model üçlüsüne göre kayıtlı setlerden otomatik seçilir.</p>
+      </div>
       <div class="iki-sutun">
         <div>
-          <div class="form-izgara">
-            <label for="t2-kaynak">Kaynak sistem</label><select id="t2-kaynak"></select>
-            <label for="t2-hedef">Hedef sistem</label><select id="t2-hedef"></select>
-            <label for="t2-model">Dönüşüm modeli</label><select id="t2-model"></select>
-            <label for="t2-epok">Ölçü epoğu t (yıl)</label><input id="t2-epok" inputmode="decimal" autocomplete="off" value="2025.0">
-            <label for="t2-tip">Giriş koordinat türü</label>
-            <select id="t2-tip"><option value="Kartezyen">Kartezyen</option><option value="Cografi">Coğrafi</option></select>
-          </div>
-          <div class="satir-dugme"><button id="t2-konum" type="button">Konumumu kullan</button><span id="t2-konum-durum" class="durum" role="status" aria-live="polite"></span></div>
-          <div id="t2-izin-yardim" class="izin-yardim" hidden></div>
-          <div class="form-izgara">
-            <label for="t2-a" id="t2-a-et">X (m)</label><input id="t2-a" inputmode="decimal" autocomplete="off" value="4116037.2588">
-            <label for="t2-b" id="t2-b-et">Y (m)</label><input id="t2-b" inputmode="decimal" autocomplete="off" value="2656358.3524">
-            <label for="t2-c" id="t2-c-et">Z (m)</label><input id="t2-c" inputmode="decimal" autocomplete="off" value="4072204.7958">
-          </div>
-          <div class="satir-dugme iki">
-            <button id="t2-donustur" class="birincil" type="button">Dönüştür</button>
-            <button id="t2-degistir" type="button">Kaynak ⇄ Hedef</button>
+          <div class="kart">
+            <div class="kart-bas"><div><h3>Sistemler ve model</h3></div></div>
+            <div class="alanlar s2">
+              <div class="alan"><label for="t2-kaynak">Kaynak sistem</label><select id="t2-kaynak"></select></div>
+              <div class="alan"><label for="t2-hedef">Hedef sistem</label><select id="t2-hedef"></select></div>
+              <div class="alan" style="grid-column: 1 / -1"><label for="t2-model">Dönüşüm modeli</label><select id="t2-model"></select></div>
+              <div class="alan"><label for="t2-epok">Ölçü epoğu t (yıl)</label><input id="t2-epok" inputmode="decimal" autocomplete="off" value="2025.0"></div>
+            </div>
           </div>
 
-          <details id="parametreler" class="parametreler" open>
-            <summary>Model parametreleri</summary>
-            <p id="p-baslik" class="p-baslik"></p>
-            <div class="form-izgara parametre-izgara">
-              <label for="p-tx">Tx (m)</label><input id="p-tx" class="p-alan" inputmode="decimal" autocomplete="off">
-              <label for="p-ty">Ty (m)</label><input id="p-ty" class="p-alan" inputmode="decimal" autocomplete="off">
-              <label for="p-tz">Tz (m)</label><input id="p-tz" class="p-alan" inputmode="decimal" autocomplete="off">
-              <label for="p-d">Ölçek D (ppm)</label><input id="p-d" class="p-alan" inputmode="decimal" autocomplete="off">
-              <label for="p-rx">Rx (yay saniyesi)</label><input id="p-rx" class="p-alan" inputmode="decimal" autocomplete="off">
-              <label for="p-ry">Ry (yay saniyesi)</label><input id="p-ry" class="p-alan" inputmode="decimal" autocomplete="off">
-              <label for="p-rz">Rz (yay saniyesi)</label><input id="p-rz" class="p-alan" inputmode="decimal" autocomplete="off">
-              <label for="p-konv">Dönüklük konvansiyonu</label>
-              <select id="p-konv"><option value="PV">PV (Position Vector)</option><option value="CF">CF (Coordinate Frame)</option></select>
-              <label for="p-xm">Xm (m), yalnız M-B</label><input id="p-xm" class="p-alan p-merkez" inputmode="decimal" autocomplete="off">
-              <label for="p-ym">Ym (m), yalnız M-B</label><input id="p-ym" class="p-alan p-merkez" inputmode="decimal" autocomplete="off">
-              <label for="p-zm">Zm (m), yalnız M-B</label><input id="p-zm" class="p-alan p-merkez" inputmode="decimal" autocomplete="off">
+          <div class="kart">
+            <div class="kart-bas">
+              <div><h3>Giriş koordinatları</h3></div>
+              <button id="t2-konum" type="button" class="hayalet"><svg class="ikon" aria-hidden="true"><use href="#i-locate"/></svg>Konumumu kullan</button>
             </div>
-            <label class="onay"><input id="p-ters" type="checkbox"> Ters yönde uygula</label>
-            <label class="onay"><input id="p-manuel" type="checkbox"> Manuel parametre girişi (Bursa-Wolf ve Molodensky-Badekas)</label>
-            <p id="p-durum" class="p-durum" role="status" aria-live="polite"></p>
-            <pre id="p-ayrinti" class="p-ayrinti"></pre>
-            <button id="p-epsg" type="button">Test örneği: EPSG 7-2 (WGS72 → WGS84), gerçek dönüşüm değil</button>
-            <p class="kucuk">Parametreler kaynak, hedef ve model üçlüsüne göre kayıtlı setten ya da IERS tablosundan otomatik seçilir ve salt okunurdur. Kayıt yoksa alanlar boş kalır; 0 ya da örnek değer yazılmaz. Kayıtlı set ters yöndeyse parametreler değiştirilmeden kesin ters çözüm uygulanır. Manuel girişte konvansiyonu ve yönü siz seçersiniz: PV ve CF aynı sayılarla farklı sonuç verir (IERS ve EPSG:1033 PV, EPSG:1032 CF).</p>
+            <span id="t2-konum-durum" class="durum" role="status" aria-live="polite"></span>
+            <div id="t2-izin-yardim" class="izin-yardim" hidden></div>
+            <div class="alanlar">
+              <div class="alan"><label for="t2-tip">Giriş koordinat türü</label>
+                <select id="t2-tip"><option value="Kartezyen">Kartezyen</option><option value="Cografi">Coğrafi</option></select></div>
+            </div>
+            <div class="alanlar s3">
+              <div class="alan"><label for="t2-a" id="t2-a-et">X (m)</label><input id="t2-a" inputmode="decimal" autocomplete="off" value="4116037.2588"></div>
+              <div class="alan"><label for="t2-b" id="t2-b-et">Y (m)</label><input id="t2-b" inputmode="decimal" autocomplete="off" value="2656358.3524"></div>
+              <div class="alan"><label for="t2-c" id="t2-c-et">Z (m)</label><input id="t2-c" inputmode="decimal" autocomplete="off" value="4072204.7958"></div>
+            </div>
+            <div class="satir-dugme iki" style="margin-bottom:0">
+              <button id="t2-donustur" class="birincil" type="button">Dönüştür</button>
+              <button id="t2-degistir" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-swap"/></svg>Kaynak ⇄ Hedef</button>
+            </div>
+          </div>
+
+          <details id="parametreler" class="kart parametreler" open>
+            <summary>Model parametreleri<svg class="ikon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <div class="p-ic">
+              <p id="p-baslik" class="p-baslik"></p>
+              <div class="alanlar s3">
+                <div class="alan"><label for="p-tx">Tx (m)</label><input id="p-tx" class="p-alan" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-ty">Ty (m)</label><input id="p-ty" class="p-alan" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-tz">Tz (m)</label><input id="p-tz" class="p-alan" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-rx">Rx (″)</label><input id="p-rx" class="p-alan" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-ry">Ry (″)</label><input id="p-ry" class="p-alan" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-rz">Rz (″)</label><input id="p-rz" class="p-alan" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-d">Ölçek D (ppm)</label><input id="p-d" class="p-alan" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan" style="grid-column: span 2"><label for="p-konv">Dönüklük konvansiyonu</label>
+                  <select id="p-konv"><option value="PV">PV (Position Vector)</option><option value="CF">CF (Coordinate Frame)</option></select></div>
+                <div class="alan"><label for="p-xm">Xm (m), M-B</label><input id="p-xm" class="p-alan p-merkez" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-ym">Ym (m), M-B</label><input id="p-ym" class="p-alan p-merkez" inputmode="decimal" autocomplete="off"></div>
+                <div class="alan"><label for="p-zm">Zm (m), M-B</label><input id="p-zm" class="p-alan p-merkez" inputmode="decimal" autocomplete="off"></div>
+              </div>
+              <div class="p-secenekler">
+                <label class="onay"><input id="p-ters" type="checkbox"> Ters yönde uygula</label>
+                <label class="onay"><input id="p-manuel" type="checkbox"> Manuel parametre girişi (Bursa-Wolf ve Molodensky-Badekas)</label>
+              </div>
+              <p id="p-durum" class="p-durum" role="status" aria-live="polite"></p>
+              <pre id="p-ayrinti" class="p-ayrinti"></pre>
+              <button id="p-epsg" type="button"><svg class="ikon" aria-hidden="true"><use href="#i-flask"/></svg>Test örneği: EPSG 7-2 (WGS72 → WGS84), gerçek dönüşüm değil</button>
+              <p class="kucuk">Parametreler kaynak, hedef ve model üçlüsüne göre kayıtlı setten ya da IERS tablosundan otomatik seçilir ve salt okunurdur. Kayıt yoksa alanlar boş kalır; 0 ya da örnek değer yazılmaz. Kayıtlı set ters yöndeyse parametreler değiştirilmeden kesin ters çözüm uygulanır. Manuel girişte konvansiyonu ve yönü siz seçersiniz: PV ve CF aynı sayılarla farklı sonuç verir (IERS ve EPSG:1033 PV, EPSG:1032 CF).</p>
+            </div>
           </details>
         </div>
-        <pre id="t2-out" class="rapor" aria-live="polite" tabindex="0">Kaynak, hedef ve modeli seçip Dönüştür'e basın.</pre>
+
+        <div class="kart rapor-kart">
+          <div class="rapor-bas">
+            <h3><svg class="ikon" aria-hidden="true"><use href="#i-terminal"/></svg>Hesap raporu</h3>
+            <button type="button" class="hayalet kopyala" data-hedef="t2-out"><svg class="ikon" aria-hidden="true"><use href="#i-copy"/></svg><span>Kopyala</span></button>
+          </div>
+          <pre id="t2-out" class="rapor" aria-live="polite" tabindex="0">Kaynak, hedef ve modeli seçip Dönüştür'e basın.</pre>
+        </div>
       </div>
     </section>
 
-    <!-- ================= BILGI ================= -->
-    <section id="panel-bilgi" role="tabpanel" aria-labelledby="sekme-bilgi" class="panel metin" hidden>
+    <section id="panel-bilgi" role="tabpanel" aria-labelledby="sekme-bilgi" class="panel metin kart" hidden>
       <h2>Ne neyi belirler?</h2>
       <p><b>Çerçeve ya da datum</b> (ITRF2020, WGS84 (G2139), ETRF2000, ED50) noktanın X, Y, Z değerini belirler. <b>Elipsoit</b> (GRS80, WGS84, Hayford) ise aynı X, Y, Z'nin φ, λ, h olarak nasıl ifade edileceğini belirler. WGS84 ile GRS80 elipsoitlerinin a değeri aynıdır, yalnız 1/f farklıdır; aynı çerçevede h en fazla 0.1 mm değişir.</p>
 
@@ -260,12 +350,13 @@
   </main>
 
   <footer class="alt">
-    <p>İTÜ Geomatik Mühendisliği ve Elektrik Mühendisliği, Salih (<a href="https://github.com/salihtatci">@salihtatci</a>). Öğretim ve deneysel kullanım içindir. Geoit verisi ICGEM (GFZ Potsdam), arazi yüksekliği Copernicus DEM (<a href="https://open-meteo.com/">Open-Meteo</a>).</p>
+    <p>İTÜ Geomatik Mühendisliği ve Elektrik Mühendisliği, Salih (<a href="https://github.com/salihtatci">@salihtatci</a>). Öğretim ve deneysel kullanım içindir; hesaplar tarayıcınızda yapılır. Geoit verisi ICGEM (GFZ Potsdam), arazi yüksekliği Copernicus DEM (<a href="https://open-meteo.com/">Open-Meteo</a>).</p>
   </footer>
 
-  <script src="config.js?v=20261025-tema"></script>
-  <script src="jeodezi.js?v=20261025-tema"></script>
-  <script src="geoit.js?v=20261025-tema"></script>
-  <script src="app.js?v=20261025-tema"></script>
+  <script src="config.js?v=20261101-shadcn"></script>
+  <script src="jeodezi.js?v=20261101-shadcn"></script>
+  <script src="geoit.js?v=20261101-shadcn"></script>
+  <script src="app.js?v=20261101-shadcn"></script>
+  <script src="ui.js?v=20261101-shadcn"></script>
 </body>
 </html>

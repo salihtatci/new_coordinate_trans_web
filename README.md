@@ -5,7 +5,7 @@
 Tarayıcıda çalışan jeodezik koordinat dönüşümü. İzin verirseniz bulunduğunuz konumu alır, dönüşüm kutularına yazar, geoit ondülasyonunu (N) **ICGEM**'den ister ve **ortometrik yüksekliği (H = h − N)** hesaplar. Hesap çekirdeği, [coordinate_transformation](https://github.com/salihtatci/coordinate_transformation) deposundaki Python/Kivy uygulamasının (`jeodezi.py`) birebir JavaScript karşılığıdır.
 
 <p align="center">
-  <img src="ekran_web_konum.png" width="68%" alt="Konum ve yükseklik sekmesi: Ankara'da h = 975.600 m, ICGEM EGM2008 N = 37.603 m, H = 937.997 m">
+  <img src="ekran_web_konum.png" width="68%" alt="Konum ve yükseklik sekmesi: Ankara'da h = 975.600 m, gömülü ICGEM EGM2008 ızgarasından N = 37.601 m, H = 937.999 m">
   <img src="ekran_web_mobil.png" width="28%" alt="Sitenin telefondaki karanlık tema görünümü">
 </p>
 
@@ -48,7 +48,8 @@ Site dosyalarının hepsi aynı klasördedir (alt klasör yok); GitHub'ın web y
 
 | Dosya | Görevi |
 | --- | --- |
-| `index.html`, `style.css` | Sayfa ve görünüm |
+| `index.html`, `style.css` | Sayfa ve görünüm (shadcn/ui tasarım sistemi, düz CSS, derleme gerektirmez) |
+| `ui.js` | Yalnız görünüm eklentileri: raporu kopyalama, büyük H değeri |
 | `jeodezi.js` | Hesap çekirdeği (`jeodezi.py`'nin karşılığı) |
 | `geoit.js` | Gömülü ızgara, ICGEM istekleri, `.dat` okuyucu, H = h − N |
 | `app.js` | Arayüz ve konum servisi |

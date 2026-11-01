@@ -40,8 +40,8 @@
     // tarayici cubugunun rengi: secim varsa ona, yoksa cihazin ayarina uy
     for (const m of document.querySelectorAll('meta[name="theme-color"]')) {
       const koyuMeta = (m.getAttribute("media") || "").includes("dark");
-      if (secili === "sistem") m.setAttribute("content", koyuMeta ? "#17201F" : "#F7F9F6");
-      else m.setAttribute("content", secili === "dark" ? "#17201F" : "#F7F9F6");
+      if (secili === "sistem") m.setAttribute("content", koyuMeta ? "#09090B" : "#FAFAFA");
+      else m.setAttribute("content", secili === "dark" ? "#09090B" : "#FAFAFA");
     }
   }
   let kayitliTema = null;
