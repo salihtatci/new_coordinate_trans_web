@@ -88,6 +88,15 @@ python -m http.server 8000
 3. Deneme: `https://icgem-proxy.<hesabınız>.workers.dev/?lat=39.925&lon=32.8369` yaklaşık 25 saniyede `"N": 37.6026...` döndürür.
 4. `config.js` içinde `icgemProxyUrl: "https://icgem-proxy.<hesabınız>.workers.dev"` yazıp yükleyin.
 
+## Doğrulama
+
+`test_proj.py`, hesap çekirdeğini (`jeodezi.py`) [PROJ](https://proj.org/) ile karşılaştırır: coğrafi ⇄ kartezyen, Bursa-Wolf (PV/CF), ED50 → WGS84 (EPSG:1784), ITRF'ler arası IERS 14 parametre ve ITRF2014 → ETRF2000 (EPSG:8405); izin verilen fark 1 µm. `jeodezi.js` ile `jeodezi.py`'nin aynı sonucu verdiği çapraz testle (`capraz_uret.py`, `capraz_karsilastir.js`) denetlenir.
+
+```bash
+pip install pyproj
+python test_proj.py
+```
+
 ## Uyarılar
 
 - H, seçilen küresel modelin geoidine göredir; TUDKA-99 ve TG-20 hibrit geoidiyle onlarca santimetre fark edebilir.
