@@ -250,7 +250,7 @@ def enu_farki(dXYZ, phi_deg, lam_deg):
 
 # IERS parametreleri: https://itrf.ign.fr/en/solutions/transformations
 # (ITRF2020 -> gecmis ITRF'ler, epok 2015.0 ; ITRF2014 -> gecmis ITRF'ler, epok 2010.0)
-# EUREF: ITRF2014 -> ETRF2000 (Altamimi, EUREF TN-1, epok 2010.0)
+# EUREF: ITRF2014 -> ETRF2000 (Altamimi, EUREF TN-1 = EPSG:8405, epok 2010.0)
 # !! Resmi/hassas islerde degerleri guncel IERS/EUREF tablolariyla KONTROL EDIN !!
 _Z = [0.0, 0.0, 0.0]
 DONUSUMLER = {
@@ -270,7 +270,7 @@ DONUSUMLER = {
                                               "IERS ITRF2020->ITRF96"),
     ("ITRF2014", "ITRF2008"): Helmert14([1.6, 1.9, 2.4], -0.02, _Z,
                                         [0.0, 0.0, -0.1], 0.03, _Z, 2010.0, "IERS ITRF2014->ITRF2008"),
-    ("ITRF2014", "ETRF2000 (ETRS89)"): Helmert14([53.7, 51.2, -55.1], 1.02, [0.891, 5.390, -8.712],
+    ("ITRF2014", "ETRF2000 (ETRS89)"): Helmert14([54.7, 52.2, -74.1], 2.12, [1.701, 10.290, -16.632],
                                                  [0.1, 0.1, -1.9], 0.11, [0.081, 0.490, -0.792],
                                                  2010.0, "EUREF ITRF2014->ETRF2000"),
     # WGS84'un guncel gerceklestirmeleri ilgili ITRF'e ~1-2 cm duzeyinde hizalidir.
